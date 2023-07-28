@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Recently Deployed Tokens</title>
+    <style>
+        /* Add some basic styling for the table */
+        table {
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Recently Deployed Tokens</h1>
+    <button onclick="fetchRecentlyDeployedTokens()">Fetch Tokens</button>
+    <table id="tokenTable">
+        <thead>
+            <tr>
+                <th>Contract Address</th>
+                <th>Token Name</th>
+                <th>Token Symbol</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Token data will be displayed here -->
+        </tbody>
+    </table>
+
+    <script>
+      async function fetchRecentlyDeployedTokens() {
+    const apiKey = 'AFFD2SXUNV3RY968V4442KMBP4928IBMJ7';
+    const contractCreationTopic = '0x3b3b57de7c68bcbe1e5daae4e7648e853bb93f9a4989c27a418e36488fc44e06';
+
+    const currentBlock = await getBlockNumber();
+    const oneHourAgoBlock = await getBlockNumberOneHourAgo(currentBlock);
+
+    const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=${oneHourAgoBlock}&toBlock=${currentBlock}&topic0=${contractCreationTopic}&apikey=${apiKey}`;
+
+    fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+            const tokenTableBody = document.querySelector('#tokenTable tbody');
+            tokenTableBody.innerHTML = '';
+
+            if (data.status === '1') {
+                data.result.forEach(log => {
+                    const contractAddress = log.address;
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td>${contractAddress}</td>`;
+                    tokenTableBody.appendChild(row);
+
+                    // Fetch token information (name, symbol) using the contract address
+                    // This requires interacting with the deployed contract's ABI (not covered in this example)
+                    // You'll need the contract's ABI and use it to interact with the contract and get token info.
+                    // Refer to the token's contract documentation to understand how to interact with it.
+                });
+            } else {
+                console.error('Error fetching logs:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching token data:', error);
+        });
+}
+
+async function getBlockNumber() {
+    const response = await fetch('https://api.etherscan.io/api?module=proxy&action=eth_blockNumber');
+    const data = await response.json();
+    return parseInt(data.result, 16);
+}
+
+async function getBlockNumberOneHourAgo(currentBlock) {
+    const oneHourAgo = Math.max(0, currentBlock - (3600 / 13)); // Assuming Ethereum block time is around 13 seconds
+    return oneHourAgo.toString(16);
+}
+
+    </script>
+</body>
+</html>
