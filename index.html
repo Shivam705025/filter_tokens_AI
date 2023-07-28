@@ -8,22 +8,34 @@
     <ul id="tokenList">
     </ul>
 
+    <script src="https://cdn.ethers.io/v5.0.7/dist/ethers.min.js"></script>
     <script>
         // Replace YOUR_ETHERSCAN_API_KEY with your actual Etherscan API key
         const etherscanApiKey = 'AFFD2SXUNV3RY968V4442KMBP4928IBMJ7';
-        const etherscanApiUrl = `https://api.etherscan.io/api?module=account&action=txlistinternal&address=0x0000000000000000000000000000000000000000&sort=desc&apikey=${etherscanApiKey}`;
+        const etherscanApiUrl = `https://api.etherscan.io/api`;
 
         async function fetchNewlyCreatedTokens() {
+            const provider = new ethers.providers.JsonRpcProvider(); // Using default provider (localhost:8545 or Infura)
+
             try {
-                const response = await fetch(etherscanApiUrl);
+                const response = await fetch(etherscanApiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        module: 'logs',
+                        action: 'getLogs',
+                        apiKey: etherscanApiKey,
+                        fromBlock: 'latest',
+                        toBlock: 'latest',
+                        address: '0x0000000000000000000000000000000000000000',
+                        topic0: ethers.utils.id('ContractCreation(address)'),
+                    }),
+                });
+
                 const data = await response.json();
 
                 if (data.status === '1' && data.message === 'OK') {
-                    const transactions = data.result.filter(tx => {
-                        const currentTimestamp = Math.floor(Date.now() / 1000); // Current Unix timestamp
-                        const txTimestamp = parseInt(tx.timeStamp);
-                        return (currentTimestamp - txTimestamp) <= 3600; // Check if within 1 hour (3600 seconds)
-                    });
+                    const transactions = data.result;
                     displayTokens(transactions);
                 } else {
                     console.error('Failed to fetch data:', data.message);
@@ -40,8 +52,8 @@
             transactions.forEach(tx => {
                 const listItem = document.createElement('li');
                 const tokenLink = document.createElement('a');
-                tokenLink.href = `https://etherscan.io/tx/${tx.hash}`;
-                tokenLink.textContent = `Transaction Hash: ${tx.hash}`;
+                tokenLink.href = `https://etherscan.io/tx/${tx.transactionHash}`;
+                tokenLink.textContent = `Transaction Hash: ${tx.transactionHash}`;
                 listItem.appendChild(tokenLink);
 
                 const timestamp = new Date(parseInt(tx.timeStamp) * 1000);
