@@ -7,7 +7,7 @@
     <h1>Tokens with Recent Liquidity Addition (Past 1 Hour)</h1>
     <ul id="tokenList"></ul>
 
-    <script src="https://cdn.jsdelivr.net/npm/graphql-request@4.2.0/dist/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@apollo/client@3.4.26/dist/index.umd.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", async function () {
   const graphEndpoint = "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2";
@@ -29,7 +29,8 @@
   `;
 
   // Fetch data from The Graph
-  const data = await request(graphEndpoint, query);
+  const client = new window.ApolloClient({ uri: graphEndpoint });
+  const { data } = await client.query({ query });
   displayTokensWithLiquidity(data);
 });
 
