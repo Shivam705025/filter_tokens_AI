@@ -36,9 +36,9 @@
     const contractCreationTopic = '0x3b3b57de7c68bcbe1e5daae4e7648e853bb93f9a4989c27a418e36488fc44e06';
 
     const currentBlock = await getBlockNumber();
-    const oneHourAgoBlock = await getBlockNumberOneHourAgo(currentBlock);
+    const tenDaysAgoBlock = await getBlockNumberTenDaysAgo(currentBlock);
 
-    const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=${oneHourAgoBlock}&toBlock=${currentBlock}&topic0=${contractCreationTopic}&apikey=${apiKey}`;
+const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=${tenDaysAgoBlock}&toBlock=${currentBlock}&topic0=${contractCreationTopic}&apikey=${apiKey}`;
 
     fetch(apiUrl)
         .then(response => response.json())
@@ -73,9 +73,10 @@ async function getBlockNumber() {
     return parseInt(data.result, 16);
 }
 
-async function getBlockNumberOneHourAgo(currentBlock) {
-    const oneHourAgo = Math.max(0, currentBlock - (3600 / 13)); // Assuming Ethereum block time is around 13 seconds
-    return oneHourAgo.toString(16);
+async function getBlockNumberTenDaysAgo(currentBlock) {
+  const oneDayInSeconds = 24 * 60 * 60; // 1 day = 24 hours * 60 minutes * 60 seconds
+  const tenDaysAgo = Math.max(0, currentBlock - (10 * oneDayInSeconds / 13)); // Assuming Ethereum block time is around 13 seconds
+  return tenDaysAgo.toString(16);
 }
 
     </script>
