@@ -62,6 +62,23 @@
                 // Get the block number where the Uniswap V2 Router contract was deployed
                 const deploymentBlock = await web3.eth.getBlockNumber();
 
+                // Calculate the block range to capture events from the past few hours (assuming 15 seconds per block)
+                const blockRange = 5 * 60 * 60 / 15; // 5 hours in blocks
+
+                // Retrieve past PairCreated events
+                const pastEvents = await uniswapV2RouterContract.getPastEvents('PairCreated', {
+                    fromBlock: deploymentBlock - blockRange,
+                    toBlock: 'latest'
+                });
+
+                // Display the past PairCreated events
+                pastEvents.forEach(event => {
+                    const { token0, token1, pair } = event.returnValues;
+                    console.log(`New pair created: ${token0}-${token1}, Pair address: ${pair}`);
+                    displayTokenPair(pair);
+                });
+
+                // Subscribe to new PairCreated events in real-time
                 uniswapV2RouterContract.events.PairCreated({ fromBlock: deploymentBlock })
                     .on('data', event => {
                         const { token0, token1, pair } = event.returnValues;
@@ -92,4 +109,5 @@
     </script>
 </body>
 </html>
+
 
