@@ -843,7 +843,7 @@ async function getLiquidityTokens() {
 ;
 
     const uniswapV2RouterContract = new web3.eth.Contract(uniswapV2RouterABI, uniswapV2RouterAddress);
-    const liquidityEvents = await uniswapV2RouterContract.getPastEvents('AddLiquidity', {
+    const liquidityEvents = await uniswapV2RouterContract.getPastEvents('addLiquidity', {
       fromBlock: oneDayAgo,
       toBlock: 'latest',
     });
