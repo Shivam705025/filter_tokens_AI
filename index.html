@@ -12,41 +12,6 @@
     <script src="https://cdn.jsdelivr.net/npm/web3@1.5.3/dist/web3.min.js"></script>
     <script>
         const providerUrl = 'wss://mainnet.infura.io/ws/v3/b80413fa91ea43f2a74700555827bcb4'; // Replace with your preferred provider
-        const uniswapV2RouterAddress = '0x7a250d5630b4cf539739df2c5dacb4c659f2488d'; // Uniswap V2 Router contract address
-                                const uniswapV2RouterABI = [
-                    {
-                        "anonymous": false,
-                        "inputs": [
-                            {
-                                "indexed": true,
-                                "internalType": "address",
-                                "name": "token0",
-                                "type": "address"
-                            },
-                            {
-                                "indexed": true,
-                                "internalType": "address",
-                                "name": "token1",
-                                "type": "address"
-                            },
-                            {
-                                "indexed": false,
-                                "internalType": "address",
-                                "name": "pair",
-                                "type": "address"
-                            },
-                            {
-                                "indexed": false,
-                                "internalType": "uint256",
-                                "name": "",
-                                "type": "uint256"
-                            }
-                        ],
-                        "name": "PairCreated",
-                        "type": "event"
-                    },
-                    // Other contract methods...
-                ];
 
         async function listenForPairCreatedEvent() {
             try {
@@ -57,38 +22,42 @@
 
                 const web3 = new Web3(providerUrl);
 
-                // Create a contract instance for Uniswap V2 Router
-                const uniswapV2RouterContract = new web3.eth.Contract(uniswapV2RouterABI, uniswapV2RouterAddress);
+                // The Graph API endpoint for Uniswap V2 PairCreated events
+                const graphApiUrl = 'https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2';
+                const query = `
+                    {
+                        pairCreateds(first: 5, orderBy: timestamp, orderDirection: desc) {
+                            token0 {
+                                id
+                            }
+                            token1 {
+                                id
+                            }
+                            pair {
+                                id
+                            }
+                        }
+                    }
+                `;
 
-                // Get the block number where the Uniswap V2 Router contract was deployed
-                const deploymentBlock = await web3.eth.getBlockNumber();
-
-                // Calculate the block range to capture events from the past few hours (assuming 15 seconds per block)
-                const blockRange = 5 * 60 * 60 / 15; // 5 hours in blocks
-
-                // Retrieve past PairCreated events
-                const pastEvents = await uniswapV2RouterContract.getPastEvents('PairCreated', {
-                    fromBlock: deploymentBlock - blockRange,
-                    toBlock: 'latest'
+                const response = await fetch(graphApiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query })
                 });
+
+                const data = await response.json();
 
                 // Display the past PairCreated events
-                pastEvents.forEach(event => {
-                    const { token0, token1, pair } = event.returnValues;
-                    console.log(`New pair created: ${token0}-${token1}, Pair address: ${pair}`);
-                    displayTokenPair(pair);
+                data.data.pairCreateds.forEach(pairCreated => {
+                    const { token0, token1, pair } = pairCreated;
+                    console.log(`New pair created: ${token0.id}-${token1.id}, Pair address: ${pair.id}`);
+                    displayTokenPair(pair.id);
                 });
 
-                // Subscribe to new PairCreated events in real-time
-                uniswapV2RouterContract.events.PairCreated({ fromBlock: deploymentBlock })
-                    .on('data', event => {
-                        const { token0, token1, pair } = event.returnValues;
-                        console.log(`New pair created: ${token0}-${token1}, Pair address: ${pair}`);
-                        displayTokenPair(pair);
-                    })
-                    .on('error', error => {
-                        console.error('Error:', error.message);
-                    });
+                // Subscribe to new PairCreated events in real-time (not included in this example)
             } catch (error) {
                 console.error('Error:', error.message);
             }
@@ -110,6 +79,3 @@
     </script>
 </body>
 </html>
-
-
-
