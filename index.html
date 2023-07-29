@@ -48,12 +48,12 @@
                         "inputs": [
                             {
                                 "internalType": "address",
-                                "name": "tokenA",
+                                "name": "token0",
                                 "type": "address"
                             },
                             {
                                 "internalType": "address",
-                                "name": "tokenB",
+                                "name": "token1",
                                 "type": "address"
                             }
                         ],
@@ -104,41 +104,26 @@
 
                 const uniswapV2FactoryContract = new web3.eth.Contract(uniswapV2FactoryABI, uniswapV2FactoryAddress);
 
-                // Get the current number of pairs created in the factory
-                const allPairsLength = await uniswapV2FactoryContract.methods.allPairsLength().call();
-
-                const newTokenAddresses = new Set();
-
-                // Loop through all pairs to get newly created token pairs
-                for (let i = 0; i < allPairsLength; i++) {
-                    const pairAddress = await uniswapV2FactoryContract.methods.allPairs(i).call();
-                    newTokenAddresses.add(pairAddress);
-                }
-
-                displayTokenAddresses([...newTokenAddresses]);
+                // Listen for the PairCreated event to get newly created pair addresses
+                uniswapV2FactoryContract.events.PairCreated({ fromBlock: oneDayAgo }, (error, event) => {
+                    if (error) {
+                        console.error('Error:', error.message);
+                    } else {
+                        const newPairAddress = event.returnValues.pair;
+                        displayTokenAddress(newPairAddress);
+                    }
+                });
 
             } catch (error) {
                 console.error('Error:', error.message);
             }
         }
 
-        function displayTokenAddresses(tokenAddresses) {
+        function displayTokenAddress(pairAddress) {
             const tokenListElement = document.getElementById('tokenList');
-            tokenListElement.innerHTML = '';
-
-            if (tokenAddresses.length === 0) {
-                tokenListElement.innerHTML = '<p>No new tokens created in the last day.</p>';
-                return;
-            }
-
-            const ul = document.createElement('ul');
-            tokenAddresses.forEach((address) => {
-                const li = document.createElement('li');
-                li.textContent = address;
-                ul.appendChild(li);
-            });
-
-            tokenListElement.appendChild(ul);
+            const li = document.createElement('li');
+            li.textContent = pairAddress;
+            tokenListElement.appendChild(li);
         }
 
         getLiquidityTokens();
