@@ -34,44 +34,35 @@ document.addEventListener("DOMContentLoaded", async () => {
     topics: [web3.utils.sha3(methodId)]
   };
 
-  // Function to fetch events in batches
-  async function fetchEvents(fromBlock, toBlock, allEvents) {
-    try {
-      const events = await contract.getPastEvents("allevents", {
-        fromBlock,
-        toBlock,
-        filter: eventFilter
-      });
-
-      if (events.length === 0) {
-        // No more events found, display the results
-        const eventsDiv = document.getElementById("events");
-        if (allEvents.length === 0) {
-          eventsDiv.innerHTML = "No events found for the specified contract and method ID.";
-        } else {
-          let html = "<ul>";
-          allEvents.forEach(event => {
-            const eventData = JSON.stringify(event.returnValues);
-            html += `<li>${eventData}</li>`;
-          });
-          html += "</ul>";
-          eventsDiv.innerHTML = html;
-        }
-      } else {
-        // Concatenate new events with previous batch
-        allEvents = allEvents.concat(events);
-        // Fetch the next batch of events
-        const newFromBlock = events[events.length - 1].blockNumber + 1;
-        fetchEvents(newFromBlock, toBlock, allEvents);
-      }
-    } catch (error) {
-      console.error("Error fetching events:", error);
-    }
-  }
-
-  // Fetch events starting from block 0 to the latest block
+  // Get the latest block number
   const latestBlock = await web3.eth.getBlockNumber();
-  fetchEvents(0, latestBlock, []);
+
+  // Calculate the starting block number to fetch only 200 events
+  const fromBlock = latestBlock > 200 ? latestBlock - 200 : 0;
+
+  try {
+    const events = await contract.getPastEvents("allevents", {
+      fromBlock: fromBlock,
+      toBlock: "latest",
+      filter: eventFilter
+    });
+
+    // Display events on the website
+    const eventsDiv = document.getElementById("events");
+    if (events.length === 0) {
+      eventsDiv.innerHTML = "No events found for the specified contract and method ID.";
+    } else {
+      let html = "<ul>";
+      events.forEach(event => {
+        const eventData = JSON.stringify(event.returnValues);
+        html += `<li>${eventData}</li>`;
+      });
+      html += "</ul>";
+      eventsDiv.innerHTML = html;
+    }
+  } catch (error) {
+    console.error("Error fetching events:", error);
+  }
 });
 
   </script>
