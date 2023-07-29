@@ -2,6 +2,30 @@
 <html>
 <head>
   <title>Token Event Logs</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+  </style>
 </head>
 <body>
   <h1>Token Event Logs</h1>
@@ -46,18 +70,20 @@
       if (eventLogs.length === 0) {
         logsDiv.innerHTML = "No event logs found for the token.";
       } else {
-        let html = "<ul>";
+        let html = "<table>";
+        html += "<tr><th>Transaction Hash</th><th>Block</th><th>Age</th><th>Method Name</th><th>Logs Info</th></tr>";
         eventLogs.forEach(eventLog => {
           const methodName = getMethodNameFromTopics(eventLog.topics);
-          html += "<li>";
-          html += `<strong>Date:</strong> ${formatTimestamp(eventLog.timeStamp)}<br>`;
-          html += `<strong>Method Name:</strong> ${methodName}<br>`;
-          html += `<strong>Block Number:</strong> ${eventLog.blockNumber}<br>`;
-          html += `<strong>Transaction Hash:</strong> ${eventLog.transactionHash}<br>`;
-          html += `<strong>Event Data:</strong> ${JSON.stringify(eventLog.data)}<br>`;
-          html += "</li>";
+          const formattedDate = formatTimestamp(eventLog.timeStamp);
+          html += "<tr>";
+          html += `<td>${eventLog.transactionHash}</td>`;
+          html += `<td>${eventLog.blockNumber}</td>`;
+          html += `<td>${formattedDate}</td>`;
+          html += `<td>${methodName}</td>`;
+          html += `<td>${JSON.stringify(eventLog.data)}</td>`;
+          html += "</tr>";
         });
-        html += "</ul>";
+        html += "</table>";
         logsDiv.innerHTML = html;
       }
     }
