@@ -20,7 +20,7 @@
             try {
                 // Request access to the user's MetaMask account
                 await window.ethereum.request({ method: 'eth_requestAccounts' });
-
+                console.log('started');
                 const web3 = new Web3(window.ethereum);
 
                 const currentTime = Math.floor(Date.now() / 1000);
@@ -125,7 +125,7 @@
             li.textContent = pairAddress;
             tokenListElement.appendChild(li);
         }
-
+        console.log('started');
         getLiquidityTokens();
 
     </script>
