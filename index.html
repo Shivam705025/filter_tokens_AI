@@ -3,26 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Uniswap Liquidity Tokens - Infura</title>
+    <title>Uniswap Liquidity Tokens - MetaMask</title>
 </head>
 <body>
-    <h1>Uniswap Liquidity Tokens in the Last Few Hours - Infura</h1>
+    <h1>Uniswap Liquidity Tokens in the Last Few Hours - MetaMask</h1>
     <div id="tokenList"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
     <script>
-        const infuraApiKey = 'b80413fa91ea43f2a74700555827bcb4';
-        const infuraEndpoint = `https://mainnet.infura.io/v3/${infuraApiKey}`;
-
         async function getLiquidityTokens() {
             if (typeof window.ethereum === 'undefined') {
                 alert('Please install MetaMask or any other Ethereum wallet extension to use this website.');
                 return;
             }
 
-            const web3 = new Web3(infuraEndpoint);
-
             try {
+                // Request access to the user's MetaMask account
+                await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+                const web3 = new Web3(window.ethereum);
+
                 const currentTime = Math.floor(Date.now() / 1000);
                 const oneDayAgo = currentTime - 86400; // 86400 seconds in a day
 
@@ -131,3 +131,4 @@
     </script>
 </body>
 </html>
+
