@@ -1,81 +1,65 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Uniswap PairCreated Event Listener</title>
+    <title>Contract Events</title>
 </head>
 <body>
-    <h1>Uniswap PairCreated Event Listener</h1>
-    <ul id="tokenList"></ul>
-
-    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.3/dist/web3.min.js"></script>
+    <h1>Contract Events</h1>
+    <button onclick="getContractEvents()">Fetch Events</button>
+    <table id="eventTable" border="1">
+        <thead>
+            <tr>
+                <th>Contract Address</th>
+                <th>Event Data</th>
+                <th>Event Topics</th>
+            </tr>
+        </thead>
+        <tbody id="eventTableBody"></tbody>
+    </table>
     <script>
-        const providerUrl = 'wss://mainnet.infura.io/ws/v3/b80413fa91ea43f2a74700555827bcb4'; // Replace with your preferred provider
+        // Replace with your contract address
+const contractAddress = '0x84b84ccd9d0bbafc098c5244280e3db6cbb50f9b';
 
-        async function listenForPairCreatedEvent() {
-            try {
-                if (typeof window.ethereum === 'undefined') {
-                    alert('Please install MetaMask or any other Ethereum wallet extension to use this website.');
-                    return;
-                }
+// Replace with your Etherscan API key
+const apiKey = 'AFFD2SXUNV3RY968V4442KMBP4928IBMJ7';
 
-                const web3 = new Web3(providerUrl);
+async function getContractEvents() {
+    const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=0&toBlock=latest&address=${contractAddress}&apikey=${apiKey}`;
 
-                // The Graph API endpoint for Uniswap V2 PairCreated events
-                const graphApiUrl = 'https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2';
-                const query = `
-                    {
-                        pairCreateds(first: 5, orderBy: timestamp, orderDirection: desc) {
-                            token0 {
-                                id
-                            }
-                            token1 {
-                                id
-                            }
-                            pair {
-                                id
-                            }
-                        }
-                    }
-                `;
+    try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
 
-                const response = await fetch(graphApiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ query })
-                });
+        if (data.status === '1') {
+            const events = data.result;
 
-                const data = await response.json();
+            // Get the table body element to populate the events
+            const tableBody = document.getElementById('eventTableBody');
 
-                // Display the past PairCreated events
-                data.data.pairCreateds.forEach(pairCreated => {
-                    const { token0, token1, pair } = pairCreated;
-                    console.log(`New pair created: ${token0.id}-${token1.id}, Pair address: ${pair.id}`);
-                    displayTokenPair(pair.id);
-                });
+            // Clear previous data in the table
+            tableBody.innerHTML = '';
 
-                // Subscribe to new PairCreated events in real-time (not included in this example)
-            } catch (error) {
-                console.error('Error:', error.message);
-            }
+            events.forEach(event => {
+                const { address, data, topics } = event;
+
+                // Create a new row for each event and populate the cells
+                const newRow = tableBody.insertRow();
+                const addressCell = newRow.insertCell();
+                const dataCell = newRow.insertCell();
+                const topicsCell = newRow.insertCell();
+
+                addressCell.textContent = address;
+                dataCell.textContent = data;
+                topicsCell.textContent = JSON.stringify(topics);
+            });
+        } else {
+            console.error('Error fetching contract events:', data.message);
         }
+    } catch (error) {
+        console.error('Error fetching contract events:', error);
+    }
+}
 
-        function displayTokenPair(pairAddress) {
-            const tokenListElement = document.getElementById('tokenList');
-            const li = document.createElement('li');
-            li.textContent = pairAddress;
-            tokenListElement.appendChild(li);
-        }
-
-        // Main function
-        async function main() {
-            await listenForPairCreatedEvent();
-        }
-
-        main();
     </script>
 </body>
 </html>
