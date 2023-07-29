@@ -20,92 +20,179 @@
             try {
                 // Request access to the user's MetaMask account
                 await window.ethereum.request({ method: 'eth_requestAccounts' });
-                console.log('started');
+
                 const web3 = new Web3(window.ethereum);
 
                 const currentTime = Math.floor(Date.now() / 1000);
                 const oneDayAgo = currentTime - 86400; // 86400 seconds in a day
 
-                const uniswapV2FactoryAddress = '0x5c69bee701ef814a2b6a3edd4b1652cb9cc5aa6f'; // Uniswap V2 Factory contract address
-                const uniswapV2FactoryABI = [
-                    {
-                        "constant": true,
-                        "inputs": [],
-                        "name": "allPairsLength",
-                        "outputs": [
-                            {
-                                "internalType": "uint256",
-                                "name": "",
-                                "type": "uint256"
-                            }
-                        ],
-                        "payable": false,
-                        "stateMutability": "view",
-                        "type": "function"
-                    },
-                    {
-                        "constant": true,
-                        "inputs": [
-                            {
-                                "internalType": "address",
-                                "name": "token0",
-                                "type": "address"
-                            },
-                            {
-                                "internalType": "address",
-                                "name": "token1",
-                                "type": "address"
-                            }
-                        ],
-                        "name": "getPair",
-                        "outputs": [
-                            {
-                                "internalType": "address",
-                                "name": "pair",
-                                "type": "address"
-                            }
-                        ],
-                        "payable": false,
-                        "stateMutability": "view",
-                        "type": "function"
-                    },
-                    {
-                        "anonymous": false,
-                        "inputs": [
-                            {
-                                "indexed": true,
-                                "internalType": "address",
-                                "name": "token0",
-                                "type": "address"
-                            },
-                            {
-                                "indexed": true,
-                                "internalType": "address",
-                                "name": "token1",
-                                "type": "address"
-                            },
-                            {
-                                "indexed": false,
-                                "internalType": "address",
-                                "name": "pair",
-                                "type": "address"
-                            },
-                            {
-                                "indexed": false,
-                                "internalType": "uint256",
-                                "name": "",
-                                "type": "uint256"
-                            }
-                        ],
-                        "name": "PairCreated",
-                        "type": "event"
-                    }
-                ];
+                const uniswapV2RouterAddress = '0x7a250d5630b4cf539739df2c5dacb4c659f2488d'; // Uniswap V2 Router contract address
+                const uniswapV2RouterABI = [
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "allPairsLength",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "tokenA",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "tokenB",
+        "type": "address"
+      }
+    ],
+    "name": "getPair",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "tokenA",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "tokenB",
+        "type": "address"
+      }
+    ],
+    "name": "createPair",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "pair",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "feeTo",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "feeToSetter",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_feeTo",
+        "type": "address"
+      }
+    ],
+    "name": "setFeeTo",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_feeToSetter",
+        "type": "address"
+      }
+    ],
+    "name": "setFeeToSetter",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "token0",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "token1",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "pair",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "PairCreated",
+    "type": "event"
+  }
+]
+;
 
-                const uniswapV2FactoryContract = new web3.eth.Contract(uniswapV2FactoryABI, uniswapV2FactoryAddress);
+                const uniswapV2RouterContract = new web3.eth.Contract(uniswapV2RouterABI, uniswapV2RouterAddress);
 
                 // Listen for the PairCreated event to get newly created pair addresses
-                uniswapV2FactoryContract.events.PairCreated({ fromBlock: oneDayAgo }, (error, event) => {
+                uniswapV2RouterContract.events.PairCreated({ fromBlock: oneDayAgo }, (error, event) => {
                     if (error) {
                         console.error('Error:', error.message);
                     } else {
@@ -125,10 +212,9 @@
             li.textContent = pairAddress;
             tokenListElement.appendChild(li);
         }
-        console.log('started');
+
         getLiquidityTokens();
 
     </script>
 </body>
 </html>
-
