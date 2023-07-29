@@ -1,68 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Ethereum Contract Events</title>
-</head>
-<body>
-  <h1>Contract Events</h1>
-  <div id="events"></div>
-
-  <!-- Add web3.js library -->
-  <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", async () => {
-      // Replace with your contract address
-      const contractAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
-
-      // Check if Web3 is available
-      if (typeof web3 !== "undefined") {
-        // Use the existing provider (e.g., MetaMask)
-        web3 = new Web3(web3.currentProvider);
-      } else {
-        // Set up a new provider (e.g., Infura)
-        const provider = new Web3.providers.HttpProvider("https://mainnet.infura.io/v3/b80413fa91ea43f2a74700555827bcb4");
-        web3 = new Web3(provider);
-      }
-
-      // Get contract instance
-      const contract = new web3.eth.Contract([], contractAddress);
-
-      // Get the latest block number
-      const latestBlock = await web3.eth.getBlockNumber();
-
-      // Calculate the starting block number to fetch only 200 events
-      const fromBlock = latestBlock > 200 ? latestBlock - 200 : 0;
-
-      try {
-        const events = await contract.getPastEvents("allevents", {
-          fromBlock: fromBlock,
-          toBlock: "latest"
-        });
-
-        // Display events on the website
-        const eventsDiv = document.getElementById("events");
-        if (events.length === 0) {
-          eventsDiv.innerHTML = "No events found for the specified contract.";
-        } else {
-          let html = "<ul>";
-          events.forEach(event => {
-            const eventData = JSON.stringify(event.returnValues);
-            html += `<li>${eventData}</li>`;
-          });
-          html += "</ul>";
-          eventsDiv.innerHTML = html;
-        }
-      } catch (error) {
-        console.error("Error fetching events:", error);
-      }
-    });
-  </script>
-</body>
-</html>
-
-<!DOCTYPE html>
-<html>
-<head>
   <title>Token Event Logs</title>
 </head>
 <body>
@@ -70,12 +8,17 @@
   <div id="logs"></div>
 
   <script>
-    // Replace with your Etherscan API key and token contract address
+    // Replace with your Etherscan API key, token contract address, and contract ABI
     const etherscanApiKey = "AFFD2SXUNV3RY968V4442KMBP4928IBMJ7";
     const tokenContractAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"; // Replace with your token contract address
+    const contractABI = [{"constant":true,"inputs":[...}]; // Replace with your contract's ABI
 
     async function fetchTokenEventLogs() {
-      const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=0&toBlock=latest&address=${tokenContractAddress}&apikey=${etherscanApiKey}`;
+      // Calculate the block range to fetch the latest 1000 events
+      const latestBlock = await getLatestBlockNumber();
+      const fromBlock = latestBlock > 1000 ? latestBlock - 1000 : 0;
+
+      const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=${fromBlock}&toBlock=latest&address=${tokenContractAddress}&apikey=${etherscanApiKey}`;
 
       try {
         const response = await fetch(apiUrl);
@@ -91,20 +34,53 @@
       }
     }
 
+    async function getLatestBlockNumber() {
+      const apiUrl = `https://api.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=${etherscanApiKey}`;
+      try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        if (data.status === "1") {
+          return parseInt(data.result, 16);
+        } else {
+          throw new Error("Failed to get the latest block number");
+        }
+      } catch (error) {
+        console.error("Error fetching the latest block number:", error);
+        throw error;
+      }
+    }
+
+    function decodeEventData(abi, data) {
+      const decoder = new ethers.utils.AbiCoder();
+      const decodedData = decoder.decode(abi.inputs, data);
+      return decodedData;
+    }
+
+    function formatTimestamp(timestamp) {
+      const date = new Date(timestamp * 1000);
+      return date.toLocaleString();
+    }
+
     function displayEventLogs(eventLogs) {
       const logsDiv = document.getElementById("logs");
       if (eventLogs.length === 0) {
         logsDiv.innerHTML = "No event logs found for the token.";
       } else {
-        let html = "<ul>";
+        let html = "<table>";
+        html += "<tr><th>Block Number</th><th>Transaction Hash</th><th>Method Name</th><th>Date</th><th>Event Data</th></tr>";
         eventLogs.forEach(eventLog => {
-          html += "<li>";
-          html += `<strong>Block Number:</strong> ${eventLog.blockNumber}<br>`;
-          html += `<strong>Transaction Hash:</strong> ${eventLog.transactionHash}<br>`;
-          html += `<strong>Event Data:</strong> ${JSON.stringify(eventLog.data)}<br>`;
-          html += "</li>";
+          const methodName = eventLog.topics[0];
+          const eventData = decodeEventData(contractABI, eventLog.data);
+          const formattedDate = formatTimestamp(eventLog.timeStamp);
+          html += "<tr>";
+          html += `<td>${eventLog.blockNumber}</td>`;
+          html += `<td>${eventLog.transactionHash}</td>`;
+          html += `<td>${methodName}</td>`;
+          html += `<td>${formattedDate}</td>`;
+          html += `<td>${JSON.stringify(eventData)}</td>`;
+          html += "</tr>";
         });
-        html += "</ul>";
+        html += "</table>";
         logsDiv.innerHTML = html;
       }
     }
@@ -113,4 +89,5 @@
   </script>
 </body>
 </html>
+
 
