@@ -10,7 +10,7 @@
   <!-- Add web3.js library -->
   <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
   <script>
-      document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", async () => {
   // Replace with your contract address and method ID
   const contractAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
   const methodId = "0xf305d719";
@@ -34,30 +34,44 @@
     topics: [web3.utils.sha3(methodId)]
   };
 
-  // Get past events
-  try {
-    const events = await contract.getPastEvents("allevents", {
-      fromBlock: 0, // You can set a different block number to start searching for events
-      toBlock: "latest", // Search events up to the latest block
-      filter: eventFilter
-    });
-
-    // Display events on the website
-    const eventsDiv = document.getElementById("events");
-    if (events.length === 0) {
-      eventsDiv.innerHTML = "No events found for the specified contract and method ID.";
-    } else {
-      let html = "<ul>";
-      events.forEach(event => {
-        const eventData = JSON.stringify(event.returnValues);
-        html += `<li>${eventData}</li>`;
+  // Function to fetch events in batches
+  async function fetchEvents(fromBlock, toBlock, allEvents) {
+    try {
+      const events = await contract.getPastEvents("allevents", {
+        fromBlock,
+        toBlock,
+        filter: eventFilter
       });
-      html += "</ul>";
-      eventsDiv.innerHTML = html;
+
+      if (events.length === 0) {
+        // No more events found, display the results
+        const eventsDiv = document.getElementById("events");
+        if (allEvents.length === 0) {
+          eventsDiv.innerHTML = "No events found for the specified contract and method ID.";
+        } else {
+          let html = "<ul>";
+          allEvents.forEach(event => {
+            const eventData = JSON.stringify(event.returnValues);
+            html += `<li>${eventData}</li>`;
+          });
+          html += "</ul>";
+          eventsDiv.innerHTML = html;
+        }
+      } else {
+        // Concatenate new events with previous batch
+        allEvents = allEvents.concat(events);
+        // Fetch the next batch of events
+        const newFromBlock = events[events.length - 1].blockNumber + 1;
+        fetchEvents(newFromBlock, toBlock, allEvents);
+      }
+    } catch (error) {
+      console.error("Error fetching events:", error);
     }
-  } catch (error) {
-    console.error("Error fetching events:", error);
   }
+
+  // Fetch events starting from block 0 to the latest block
+  const latestBlock = await web3.eth.getBlockNumber();
+  fetchEvents(0, latestBlock, []);
 });
 
   </script>
