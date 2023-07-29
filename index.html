@@ -21,6 +21,7 @@
 
         if (data.status === "1" && data.message === "OK" && data.result) {
           const blockNumber = parseInt(data.result, 16);
+          console.log(blockNumber);
           return blockNumber;
         } else {
           console.error("Error fetching block number by timestamp:", data.message);
