@@ -12,27 +12,27 @@
     const etherscanApiKey = "AFFD2SXUNV3RY968V4442KMBP4928IBMJ7";
     const tokenContractAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"; // Replace with your token contract address
 
-    async function getLatestBlockNumber() {
-      const apiUrl = `https://api.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=${etherscanApiKey}`;
+    async function getBlockNumberByTimestamp(timestamp) {
+      const apiUrl = `https://api.etherscan.io/api?module=block&action=getblocknobytime&timestamp=${timestamp}&closest=before&apikey=${etherscanApiKey}`;
 
       try {
         const response = await fetch(apiUrl);
         const data = await response.json();
 
-        if (data.status === "1" && data.message === "OK") {
-          const latestBlockNumber = parseInt(data.result, 16);
-          return latestBlockNumber;
+        if (data.status === "1" && data.message === "OK" && data.result) {
+          const blockNumber = parseInt(data.result, 16);
+          return blockNumber;
         } else {
-          console.error("Error fetching latest block number:", data.message);
+          console.error("Error fetching block number by timestamp:", data.message);
           return null;
         }
       } catch (error) {
-        console.error("Error fetching latest block number:", error);
+        console.error("Error fetching block number by timestamp:", error);
         return null;
       }
     }
 
-    async function getTransactionHashFromBlock(blockNumber) {
+    async function getTransactionsForBlock(blockNumber) {
       const apiUrl = `https://api.etherscan.io/api?module=proxy&action=eth_getBlockByNumber&tag=${blockNumber}&boolean=true&apikey=${etherscanApiKey}`;
 
       try {
@@ -40,63 +40,51 @@
         const data = await response.json();
 
         if (data.status === "1" && data.message === "OK" && data.result && data.result.transactions) {
-          // Get the first transaction hash from the block
-          const transactionHash = data.result.transactions[0].hash;
-          return transactionHash;
+          // Sort transactions in ascending order of age (timeStamp)
+          const sortedTransactions = data.result.transactions.sort((a, b) => a.timeStamp - b.timeStamp);
+          return sortedTransactions;
         } else {
-          console.error("Error fetching transaction hash from block:", data.message);
+          console.error("Error fetching transactions for block:", data.message);
           return null;
         }
       } catch (error) {
-        console.error("Error fetching transaction hash from block:", error);
+        console.error("Error fetching transactions for block:", error);
         return null;
       }
     }
 
-    async function getLiquidityCreatedInfo(transactionHash) {
-      const apiUrl = `https://api.etherscan.io/api?module=proxy&action=eth_getTransactionByHash&txhash=${transactionHash}&apikey=${etherscanApiKey}`;
-
-      try {
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-
-        if (data.status === "1" && data.message === "OK" && data.result) {
-          // Get the relevant information from the transaction data
-          const token0Address = data.result.input.substr(34, 42);
-          const token1Address = data.result.input.substr(76, 42);
-          const liquidityCreatedInfo = `Transaction Hash: ${transactionHash}\nToken0 Address: ${token0Address}\nToken1 Address: ${token1Address}`;
-          return liquidityCreatedInfo;
-        } else {
-          console.error("Error fetching liquidity created info:", data.message);
-          return null;
-        }
-      } catch (error) {
-        console.error("Error fetching liquidity created info:", error);
-        return null;
-      }
-    }
-
-    async function displayLiquidityCreatedInfo() {
-      const latestBlockNumber = await getLatestBlockNumber();
-      if (latestBlockNumber === null) {
+    async function getLiquidityCreatedInfo() {
+      const oneHourAgoTimestamp = Math.floor(Date.now() / 1000) - 3600; // 1 hour ago
+      const blockNumber = await getBlockNumberByTimestamp(oneHourAgoTimestamp);
+      if (blockNumber === null) {
         return;
       }
 
-      const transactionHash = await getTransactionHashFromBlock(latestBlockNumber);
-      if (transactionHash === null) {
+      const transactions = await getTransactionsForBlock(blockNumber);
+      if (transactions === null) {
         return;
       }
 
-      const liquidityCreatedInfo = await getLiquidityCreatedInfo(transactionHash);
-      if (liquidityCreatedInfo === null) {
+      // Find the transaction with 1-second age (timeStamp)
+      const transaction = transactions.find(t => {
+        const ageInSeconds = Math.floor(Date.now() / 1000) - parseInt(t.timeStamp);
+        return ageInSeconds === 1;
+      });
+
+      if (!transaction) {
+        console.error("No transaction found with 1-hour age.");
         return;
       }
+
+      const token0Address = transaction.input.substr(34, 42);
+      const token1Address = transaction.input.substr(76, 42);
+      const liquidityCreatedInfo = `Transaction Hash: ${transaction.hash}\nToken0 Address: ${token0Address}\nToken1 Address: ${token1Address}`;
 
       const liquidityInfoDiv = document.getElementById("liquidityInfo");
       liquidityInfoDiv.textContent = liquidityCreatedInfo;
     }
 
-    displayLiquidityCreatedInfo();
+    getLiquidityCreatedInfo();
   </script>
 </body>
 </html>
