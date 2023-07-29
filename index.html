@@ -59,33 +59,40 @@
       return date.toLocaleString();
     }
 
-    function getMethodNameFromTopics(topics) {
-      // The method name (signature) is the first topic (topics[0])
-      const methodName = topics[0];
-      return methodName;
-    }
-
     function displayEventLogs(eventLogs) {
       const logsDiv = document.getElementById("logs");
       if (eventLogs.length === 0) {
         logsDiv.innerHTML = "No event logs found for the token.";
       } else {
         let html = "<table>";
-        html += "<tr><th>Transaction Hash</th><th>Block</th><th>Age</th><th>Method Name</th><th>Logs Info</th></tr>";
+        html += "<tr><th>Txn Hash</th><th>Block</th><th>Age</th><th>Method</th><th>Logs</th></tr>";
         eventLogs.forEach(eventLog => {
           const methodName = getMethodNameFromTopics(eventLog.topics);
           const formattedDate = formatTimestamp(eventLog.timeStamp);
+          const age = calculateAge(eventLog.timeStamp);
           html += "<tr>";
           html += `<td>${eventLog.transactionHash}</td>`;
           html += `<td>${eventLog.blockNumber}</td>`;
-          html += `<td>${formattedDate}</td>`;
-          html += `<td>${methodName}</td>`;
+          html += `<td>${eventLog.age}</td>`;
+          html += `<td>${eventLog.methodName}</td>`;
           html += `<td>${JSON.stringify(eventLog.data)}</td>`;
           html += "</tr>";
         });
         html += "</table>";
         logsDiv.innerHTML = html;
       }
+    }
+
+    function getMethodNameFromTopics(topics) {
+      // The method name (signature) is the first topic (topics[0])
+      const methodName = topics[0];
+      return methodName;
+    }
+
+    function calculateAge(timestamp) {
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+      const ageInSeconds = currentTimestamp - timestamp;
+      return `${ageInSeconds} secs ago`;
     }
 
     fetchTokenEventLogs();
