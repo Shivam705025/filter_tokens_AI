@@ -3,39 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Newly Created Tokens</title>
+    <title>Uniswap Liquidity Tokens - Infura</title>
 </head>
 <body>
-    <h1>Newly Created Tokens in the Last Day</h1>
+    <h1>Uniswap Liquidity Tokens in the Last Few Hours - Infura</h1>
     <div id="tokenList"></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
     <script>
-        const etherscanApiKey = 'AFFD2SXUNV3RY968V4442KMBP4928IBMJ7';
-const etherscanBaseUrl = 'https://api.etherscan.io/api';
+        const infuraApiKey = 'b80413fa91ea43f2a74700555827bcb4';
+const infuraEndpoint = `https://mainnet.infura.io/v3/${infuraApiKey}`;
 
-async function getNewTokensInLastDay() {
+async function getLiquidityTokens() {
+  if (typeof window.ethereum === 'undefined') {
+    alert('Please install MetaMask or any other Ethereum wallet extension to use this website.');
+    return;
+  }
+
+  const web3 = new Web3(infuraEndpoint);
+
   try {
     const currentTime = Math.floor(Date.now() / 1000);
     const oneDayAgo = currentTime - 86400; // 86400 seconds in a day
 
-    const response = await fetch(
-      `${etherscanBaseUrl}?module=account&action=txlist&address=0x0000000000000000000000000000000000000000&startblock=${oneDayAgo}&endblock=${currentTime}&sort=asc&apikey=${etherscanApiKey}`
-    );
+    const uniswapV2RouterAddress = '0x7a250d5630b4cf539739df2c5dacb4c659f2488d'; // Uniswap V2 Router contract address
+    const uniswapV2RouterABI = [/* Uniswap V2 Router ABI */];
 
-    if (!response.ok) {
-      throw new Error('Network response was not ok.');
-    }
-
-    const data = await response.json();
-    const transactions = data.result;
+    const uniswapV2RouterContract = new web3.eth.Contract(uniswapV2RouterABI, uniswapV2RouterAddress);
+    const liquidityEvents = await uniswapV2RouterContract.getPastEvents('AddLiquidity', {
+      fromBlock: oneDayAgo,
+      toBlock: 'latest',
+    });
 
     const newTokenAddresses = new Set();
 
-    for (const tx of transactions) {
-      const contractAddress = tx.to;
-      if (tx.input === '0x' && !newTokenAddresses.has(contractAddress)) {
-        newTokenAddresses.add(contractAddress);
-      }
+    for (const event of liquidityEvents) {
+      const { tokenA, tokenB } = event.returnValues;
+      const liquidityToken = `${tokenA}-${tokenB}`;
+      newTokenAddresses.add(liquidityToken);
     }
 
     displayTokenAddresses([...newTokenAddresses]);
@@ -64,7 +69,7 @@ function displayTokenAddresses(tokenAddresses) {
   tokenListElement.appendChild(ul);
 }
 
-getNewTokensInLastDay();
+getLiquidityTokens();
 
     </script>
 </body>
