@@ -3,216 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Uniswap Liquidity Tokens - MetaMask</title>
+    <title>Uniswap Liquidity Tokens - Web3</title>
 </head>
 <body>
-    <h1>Uniswap Liquidity Tokens in the Last Few Hours - MetaMask</h1>
+    <h1>Uniswap Liquidity Tokens - Web3</h1>
     <div id="tokenList"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
     <script>
         async function getLiquidityTokens() {
-            if (typeof window.ethereum === 'undefined') {
-                alert('Please install MetaMask or any other Ethereum wallet extension to use this website.');
-                return;
-            }
-
             try {
+                if (typeof window.ethereum === 'undefined') {
+                    alert('Please install MetaMask or any other Ethereum wallet extension to use this website.');
+                    return;
+                }
+
                 // Request access to the user's MetaMask account
                 await window.ethereum.request({ method: 'eth_requestAccounts' });
 
-                const web3 = new Web3(window.ethereum);
+                const providerUrl = 'wss://mainnet.infura.io/ws/v3/b80413fa91ea43f2a74700555827bcb4';
+                const web3 = new Web3(providerUrl);
 
-                const currentTime = Math.floor(Date.now() / 1000);
-                const oneDayAgo = currentTime - 14400;
-
-                const uniswapV2RouterAddress = '0x7a250d5630b4cf539739df2c5dacb4c659f2488d'; // Uniswap V2 Router contract address
+                // Uniswap V2 Router contract address and ABI
+                const uniswapV2RouterAddress = '0x7a250d5630b4cf539739df2c5dacb4c659f2488d';
                 const uniswapV2RouterABI = [
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "allPairsLength",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "tokenA",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "tokenB",
-        "type": "address"
-      }
-    ],
-    "name": "getPair",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": false,
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "tokenA",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "tokenB",
-        "type": "address"
-      }
-    ],
-    "name": "createPair",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "pair",
-        "type": "address"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "feeTo",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "feeToSetter",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": false,
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_feeTo",
-        "type": "address"
-      }
-    ],
-    "name": "setFeeTo",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "constant": false,
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_feeToSetter",
-        "type": "address"
-      }
-    ],
-    "name": "setFeeToSetter",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "token0",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "token1",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "pair",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "PairCreated",
-    "type": "event"
-  }
-]
-;
+                    {
+                        "anonymous": false,
+                        "inputs": [
+                            {
+                                "indexed": true,
+                                "internalType": "address",
+                                "name": "token0",
+                                "type": "address"
+                            },
+                            {
+                                "indexed": true,
+                                "internalType": "address",
+                                "name": "token1",
+                                "type": "address"
+                            },
+                            {
+                                "indexed": false,
+                                "internalType": "address",
+                                "name": "pair",
+                                "type": "address"
+                            },
+                            {
+                                "indexed": false,
+                                "internalType": "uint256",
+                                "name": "",
+                                "type": "uint256"
+                            }
+                        ],
+                        "name": "PairCreated",
+                        "type": "event"
+                    },
+                    // Other contract methods...
+                ];
 
+                // Create a contract instance for Uniswap V2 Router
                 const uniswapV2RouterContract = new web3.eth.Contract(uniswapV2RouterABI, uniswapV2RouterAddress);
 
-                // Listen for the PairCreated event to get newly created pair addresses
-                uniswapV2RouterContract.events.PairCreated({ fromBlock: oneDayAgo }, (error, event) => {
-                    if (error) {
-                        console.error('Error:', error.message);
-                    } else {
-                        const newPairAddress = event.returnValues.pair;
-                        displayTokenAddress(newPairAddress);
-                    }
-                });
+                // Get the block number where the Uniswap V2 Router contract was deployed
+                async function getRouterDeploymentBlock() {
+                    const receipt = await web3.eth.getTransactionReceipt(uniswapV2RouterAddress);
+                    return receipt.blockNumber;
+                }
 
+                // Listen for the PairCreated event of Uniswap V2 Router
+                async function listenForPairCreatedEvent() {
+                    const deploymentBlock = await getRouterDeploymentBlock();
+
+                    uniswapV2RouterContract.events.PairCreated({ fromBlock: deploymentBlock })
+                        .on('data', event => {
+                            const { token0, token1, pair } = event.returnValues;
+                            console.log(`New pair created: ${token0}-${token1}, Pair address: ${pair}`);
+                            displayTokenAddress(pair);
+                        })
+                        .on('error', error => {
+                            console.error('Error:', error.message);
+                        });
+                }
+
+                // Display the token address
+                function displayTokenAddress(pairAddress) {
+                    const tokenListElement = document.getElementById('tokenList');
+                    const li = document.createElement('li');
+                    li.textContent = pairAddress;
+                    tokenListElement.appendChild(li);
+                }
+
+                // Main function
+                async function main() {
+                    try {
+                        await listenForPairCreatedEvent();
+                    } catch (error) {
+                        console.error('Error:', error.message);
+                    }
+                }
+
+                main();
             } catch (error) {
                 console.error('Error:', error.message);
             }
         }
 
-        function displayTokenAddress(pairAddress) {
-            const tokenListElement = document.getElementById('tokenList');
-            const li = document.createElement('li');
-            li.textContent = pairAddress;
-            tokenListElement.appendChild(li);
-        }
-
+        // Call the function to start listening for events
         getLiquidityTokens();
 
     </script>
