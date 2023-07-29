@@ -11,6 +11,7 @@
     // Replace with your Etherscan API key and token contract address
     const etherscanApiKey = "AFFD2SXUNV3RY968V4442KMBP4928IBMJ7";
     const tokenContractAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"; // Replace with your token contract address
+    const methodName = "0xf305d719"; // Replace with the method name you want to filter
 
     async function fetchTokenEventLogs() {
       const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=0&toBlock=latest&address=${tokenContractAddress}&apikey=${etherscanApiKey}`;
@@ -20,7 +21,9 @@
         const data = await response.json();
 
         if (data.status === "1" && data.message === "OK") {
-          displayEventLogs(data.result);
+          const filteredLogs = data.result.filter(eventLog => eventLog.topics.includes(methodName));
+          const sortedLogs = filteredLogs.sort((a, b) => b.timeStamp - a.timeStamp);
+          displayEventLogs(sortedLogs);
         } else {
           console.error("Error fetching event logs:", data.message);
         }
@@ -29,14 +32,20 @@
       }
     }
 
+    function formatTimestamp(timestamp) {
+      const date = new Date(timestamp * 1000);
+      return date.toLocaleString();
+    }
+
     function displayEventLogs(eventLogs) {
       const logsDiv = document.getElementById("logs");
       if (eventLogs.length === 0) {
-        logsDiv.innerHTML = "No event logs found for the token.";
+        logsDiv.innerHTML = "No event logs found for the specified method name.";
       } else {
         let html = "<ul>";
         eventLogs.forEach(eventLog => {
           html += "<li>";
+          html += `<strong>Date:</strong> ${formatTimestamp(eventLog.timeStamp)}<br>`;
           html += `<strong>Block Number:</strong> ${eventLog.blockNumber}<br>`;
           html += `<strong>Transaction Hash:</strong> ${eventLog.transactionHash}<br>`;
           html += `<strong>Event Data:</strong> ${JSON.stringify(eventLog.data)}<br>`;
@@ -51,7 +60,3 @@
   </script>
 </body>
 </html>
-
-
-
-
