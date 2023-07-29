@@ -10,61 +10,52 @@
   <!-- Add web3.js library -->
   <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
   <script>
-document.addEventListener("DOMContentLoaded", async () => {
-  // Replace with your contract address and method ID
-  const contractAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
-  const methodId = "0xf305d719";
+    document.addEventListener("DOMContentLoaded", async () => {
+      // Replace with your contract address
+      const contractAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
 
-  // Check if Web3 is available
-  if (typeof web3 !== "undefined") {
-    // Use the existing provider (e.g., MetaMask)
-    web3 = new Web3(web3.currentProvider);
-  } else {
-    // Set up a new provider (e.g., Infura)
-    const provider = new Web3.providers.HttpProvider("https://mainnet.infura.io/v3/b80413fa91ea43f2a74700555827bcb4");
-    web3 = new Web3(provider);
-  }
+      // Check if Web3 is available
+      if (typeof web3 !== "undefined") {
+        // Use the existing provider (e.g., MetaMask)
+        web3 = new Web3(web3.currentProvider);
+      } else {
+        // Set up a new provider (e.g., Infura)
+        const provider = new Web3.providers.HttpProvider("https://mainnet.infura.io/v3/b80413fa91ea43f2a74700555827bcb4");
+        web3 = new Web3(provider);
+      }
 
-  // Get contract instance
-  const contract = new web3.eth.Contract([], contractAddress);
+      // Get contract instance
+      const contract = new web3.eth.Contract([], contractAddress);
 
-  // Define the event filter
-  const eventFilter = {
-    address: contractAddress,
-    topics: [web3.utils.sha3(methodId)]
-  };
+      // Get the latest block number
+      const latestBlock = await web3.eth.getBlockNumber();
 
-  // Get the latest block number
-  const latestBlock = await web3.eth.getBlockNumber();
+      // Calculate the starting block number to fetch only 200 events
+      const fromBlock = latestBlock > 200 ? latestBlock - 200 : 0;
 
-  // Calculate the starting block number to fetch only 200 events
-  const fromBlock = latestBlock > 200 ? latestBlock - 200 : 0;
+      try {
+        const events = await contract.getPastEvents("allevents", {
+          fromBlock: fromBlock,
+          toBlock: "latest"
+        });
 
-  try {
-    const events = await contract.getPastEvents("allevents", {
-      fromBlock: fromBlock,
-      toBlock: "latest",
-      filter: eventFilter
+        // Display events on the website
+        const eventsDiv = document.getElementById("events");
+        if (events.length === 0) {
+          eventsDiv.innerHTML = "No events found for the specified contract.";
+        } else {
+          let html = "<ul>";
+          events.forEach(event => {
+            const eventData = JSON.stringify(event.returnValues);
+            html += `<li>${eventData}</li>`;
+          });
+          html += "</ul>";
+          eventsDiv.innerHTML = html;
+        }
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      }
     });
-
-    // Display events on the website
-    const eventsDiv = document.getElementById("events");
-    if (events.length === 0) {
-      eventsDiv.innerHTML = "No events found for the specified contract and method ID.";
-    } else {
-      let html = "<ul>";
-      events.forEach(event => {
-        const eventData = JSON.stringify(event.returnValues);
-        html += `<li>${eventData}</li>`;
-      });
-      html += "</ul>";
-      eventsDiv.innerHTML = html;
-    }
-  } catch (error) {
-    console.error("Error fetching events:", error);
-  }
-});
-
   </script>
 </body>
 </html>
