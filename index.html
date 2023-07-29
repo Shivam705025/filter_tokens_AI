@@ -44,7 +44,7 @@
         const data = await response.json();
 
         if (data.status === "1" && data.message === "OK") {
-          const sortedLogs = data.result.sort((a, b) => a.blockNumber - b.blockNumber); // Sort in ascending order
+          const sortedLogs = data.result.sort((a, b) => b.blockNumber - a.blockNumber); // Sort in descending order
           displayEventLogs(sortedLogs);
         } else {
           console.error("Error fetching event logs:", data.message);
