@@ -66,6 +66,42 @@ async function fetchTokenEventLogs() {
       return `${ageInSeconds} secs ago`;
     }
 
+        async function fetchTransactionInfo(transactionHash) {
+      const apiUrl = `https://api.etherscan.io/api?module=proxy&action=getTransactionByHash&txhash=${transactionHash}&apikey=${etherscanApiKey}`;
+
+      try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+
+        if (data.status === "1") {
+          return data.result;
+        } else {
+          console.error("Error fetching transaction info:", data.message);
+          return null;
+        }
+      } catch (error) {
+        console.error("Error fetching transaction info:", error);
+        return null;
+      }
+    }
+
+    async function displayTransactionInfo(transactionHash) {
+      const transactionInfo = await fetchTransactionInfo(transactionHash);
+      if (transactionInfo) {
+        const transactionInfoText = JSON.stringify(transactionInfo, null, 2);
+        const transactionInfoBox = document.createElement("textarea");
+        transactionInfoBox.value = transactionInfoText;
+        transactionInfoBox.setAttribute("readonly", "true");
+        transactionInfoBox.style.width = "100%";
+        transactionInfoBox.style.height = "150px";
+        transactionInfoBox.style.marginTop = "10px";
+        transactionInfoBox.style.resize = "none";
+
+        const logsDiv = document.getElementById("logs");
+        logsDiv.appendChild(transactionInfoBox);
+      }
+    }
+
     function displayEventLogs(eventLogs) {
       const logsDiv = document.getElementById("logs");
       if (eventLogs.length === 0) {
@@ -84,6 +120,9 @@ async function fetchTokenEventLogs() {
           html += `<td>${methodName}</td>`;
           html += `<td><pre>${getLogInfo(eventLog)}</pre></td>`;
           html += "</tr>";
+          
+        const transactionHash = eventLog.transactionHash;
+        displayTransactionInfo(transactionHash);
         });
         html += "</table>";
         logsDiv.innerHTML = html;
