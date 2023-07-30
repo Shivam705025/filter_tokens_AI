@@ -10,59 +10,24 @@
       padding: 0;
     }
 
-        /* Style for the "Fetch Contract Code" button */
-    .fetch-contract-btn {
-      background-color: #ff6b6b; /* Use a different color */
-      color: #ffffff;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-top: 5px;
-      display: block;
-      margin: 10px auto;
-    }
-
-    .fetch-contract-btn:hover {
-      background-color: #e24e4e; /* Darker color on hover */
-    }
-
-    /* Style for the contract code section */
-    .contract-code-section {
-      display: none;
-      margin-top: 20px;
-    }
-
-    .contract-code-section.show {
-      display: block;
-    }
-
-    /* Style for the contract code text area */
-    .contract-code {
-      width: 100%;
-      height: 200px;
-      resize: none;
-      background-color: #f9f9f9;
-      border: 1px solid #ddd;
-      padding: 10px;
-      font-family: monospace;
-      font-size: 14px;
-      color: #444;
-      border-radius: 5px;
-      margin-top: 10px;
-    }
-
     h1 {
       color: #4e54c8;
       text-align: center;
       padding: 20px 0;
     }
 
-    #tokenList {
-      margin-top: 20px;
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
     }
 
-    ul {
+    #tokenList {
+      margin-top: 20px;
       list-style-type: none;
       padding: 0;
     }
@@ -79,7 +44,7 @@
       overflow-wrap: break-word;
     }
 
-    .etherscan-btn {
+    .button {
       background-color: #4e54c8;
       color: #ffffff;
       border: none;
@@ -87,65 +52,52 @@
       border-radius: 5px;
       cursor: pointer;
       margin-top: 5px;
-      display: block;
-      margin: 10px auto;
+      margin-left: 10px;
     }
 
-    .etherscan-btn:hover {
+    .button:hover {
       background-color: #3c3f88;
     }
 
-    /* Style for the "Fetch New Tokens" button */
-    .fetch-btn {
-      background-color: #4e54c8;
-      color: #ffffff;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 30px;
-      cursor: pointer;
-      font-size: 16px;
-      display: block;
-      margin: 20px auto;
+    .contract-code-section {
+      display: none;
+      margin-top: 10px;
     }
 
-    .fetch-btn:hover {
-      background-color: #3c3f88;
+    .contract-code-section.show {
+      display: block;
     }
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      background-color: #ffffff;
-            border-radius: 10px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+
+    .contract-code {
+      width: 100%;
+      height: 150px;
+      resize: none;
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 14px;
+      color: #444;
+      border-radius: 5px;
+      margin-top: 10px;
     }
-        .timestamp {
+
+    .timestamp {
       font-size: 14px;
       color: #777;
-    }
-    .fetch-btn:hover {
-      background-color: #3442a6;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>New Uniswap Tokens</h1>
-    <button class="fetch-btn" onclick="fetchNewTokens()">Fetch New Tokens</button>
-    <div id="tokenList"></div>
+    <button class="button" onclick="fetchNewTokens()">Fetch New Tokens</button>
+    <ul id="tokenList"></ul>
   </div>
-      <div class="contract-code-section" id="contractCodeSection">
-      <h3>Contract Code</h3>
-      <textarea class="contract-code" id="contractCodeTextArea" readonly></textarea>
-    </div>
 
   <script src="https://cdn.ethers.io/lib/ethers-5.4.umd.min.js"></script>
   <script>
-    // Replace with your Etherscan API key
     const etherscanApiKey = "AFFD2SXUNV3RY968V4442KMBP4928IBMJ7";
-
-    // Uniswap Factory contract address on the Ethereum mainnet
     const uniswapFactoryAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
 
     async function fetchNewTokens() {
@@ -158,16 +110,8 @@
         displayTokens(tokens);
       }
     }
-        document.addEventListener("click", async (event) => {
-      // Handle click event for the "Fetch Contract Code" button
-      if (event.target.classList.contains("contract-btn")) {
-        const address = event.target.dataset.address;
-        await fetchAndDisplayContractCode(address);
-      }
-    });
+
     async function fetchTokenCreationEvents() {
-      // The topic0 for PairCreated event is the event signature.
-      // It should be a 32-byte hexadecimal value.
       const topic0 = "0xc9c65396";
 
       const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=17804130&toBlock=latest&address=${uniswapFactoryAddress}&apikey=${etherscanApiKey}`;
@@ -189,36 +133,38 @@
     }
 
     function extractTokenAddresses(events) {
-      return events.map(event => event.topics[1]); // Assuming the token contract address is in the second topic
+      return events.map(event => event.topics[1]);
     }
 
     function displayTokens(tokens) {
-      const tokenListDiv = document.getElementById("tokenList");
-      tokenListDiv.innerHTML = "<strong>New Tokens:</strong>";
-      const ul = document.createElement("ul");
+      const tokenList = document.getElementById("tokenList");
+      tokenList.innerHTML = "";
 
       tokens.reverse().forEach(async token => {
-        const li = document.createElement("li");
         const formattedAddress = formatAddress(token);
 
         if (formattedAddress === "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2") {
           return;
         }
 
-        // Fetch the block timestamp for each token creation event
+        const li = document.createElement("li");
+
         const timestamp = await fetchBlockTimestamp(token);
+        const timestampStr = new Date(timestamp * 1000).toLocaleString();
 
         li.innerHTML = `
           <span class="address">${formattedAddress}</span>
-          <p class="timestamp">Created on: ${new Date(timestamp * 1000).toLocaleString()}</p>
-          <button class="etherscan-btn" onclick="goToEtherscan('${formattedAddress}')">View on Etherscan</button>
-          <button class="contract-btn" data-address="${formattedAddress}">Fetch Contract Code</button>
+          <p class="timestamp">Created on: ${timestampStr}</p>
+          <button class="button" onclick="goToEtherscan('${formattedAddress}')">View on Etherscan</button>
+          <button class="button contract-btn" data-address="${formattedAddress}">Fetch Contract Code</button>
+          <div class="contract-code-section" id="contractCodeSection-${formattedAddress}">
+            <h3>Contract Code</h3>
+            <textarea class="contract-code" id="contractCodeTextArea-${formattedAddress}" readonly></textarea>
+          </div>
         `;
 
-        ul.appendChild(li);
+        tokenList.appendChild(li);
       });
-
-      tokenListDiv.appendChild(ul);
     }
 
     async function fetchBlockTimestamp(address) {
@@ -241,8 +187,8 @@
     }
 
     function displayNoNewTokens() {
-      const tokenListDiv = document.getElementById("tokenList");
-      tokenListDiv.innerHTML = "<p>No new tokens created on Uniswap.</p>";
+      const tokenList = document.getElementById("tokenList");
+      tokenList.innerHTML = "<p>No new tokens created on Uniswap.</p>";
     }
 
     function formatAddress(address) {
@@ -252,49 +198,46 @@
     function goToEtherscan(address) {
       window.open(`https://etherscan.io/address/${address}`, '_blank');
     }
-                async function fetchAndDisplayContractCode(address) {
+
+    async function fetchAndDisplayContractCode(address) {
       const contractCode = await fetchContractCode(address);
       if (contractCode) {
-        // Display the contract code section
-        const contractCodeSection = document.getElementById("contractCodeSection");
+        const contractCodeSection = document.getElementById(`contractCodeSection-${address}`);
         contractCodeSection.classList.add("show");
 
-        // Display the contract code in the text area
-        const contractCodeTextArea = document.getElementById("contractCodeTextArea");
+        const contractCodeTextArea = document.getElementById(`contractCodeTextArea-${address}`);
         contractCodeTextArea.value = contractCode;
       } else {
-    // Contract code not available or not verified
-    const modal = document.createElement("div");
-    modal.classList.add("modal");
+        // Contract code not available or not verified
+        const modal = document.createElement("div");
+        modal.classList.add("modal");
 
-    const closeButton = document.createElement("span");
-    closeButton.classList.add("close");
-    closeButton.innerHTML = "&times;";
-    closeButton.addEventListener("click", () => {
-      document.body.removeChild(modal);
-    });
+        const closeButton = document.createElement("span");
+        closeButton.classList.add("close");
+        closeButton.innerHTML = "&times;";
+        closeButton.addEventListener("click", () => {
+          document.body.removeChild(modal);
+        });
 
-    const message = document.createElement("p");
-    message.textContent = "Contract code not available or not verified.";
+        const message = document.createElement("p");
+        message.textContent = "Contract code not available or not verified.";
 
-    modal.appendChild(closeButton);
-    modal.appendChild(message);
+        modal.appendChild(closeButton);
+        modal.appendChild(message);
 
-    document.body.appendChild(modal);
-  }
-}       
-  
+        document.body.appendChild(modal);
+      }
+    }
 
     async function fetchContractCode(address) {
-            const apiKeys = '8YUX8ETXVV5Y6YNWCN6TECQXSXAZTVRFPS'; // Replace with your actual API key
-            const apiUrls = `https://api.etherscan.io/api?module=contract&action=getsourcecode&address=${address}&apikey=${apiKeys}`;
+      const apiKeys = '8YUX8ETXVV5Y6YNWCN6TECQXSXAZTVRFPS'; // Replace with your actual API key
+      const apiUrls = `https://api.etherscan.io/api?module=contract&action=getsourcecode&address=${address}&apikey=${apiKeys}`;
 
       try {
         const response = await fetch(apiUrls);
         const data = await response.json();
 
         if (data.status === "1" && data.result.length > 0) {
-          // Assuming the first result contains the contract source code
           return data.result[0].SourceCode;
         } else {
           console.error("Error fetching contract source code:", data);
