@@ -32,7 +32,7 @@ async function fetchTokenCreationEvents(latestBlock) {
   // It should be a 32-byte hexadecimal value.
   const topic0 = "0xc9c65396";
 
-  const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=${latestBlock}&toBlock=${latestBlock}&address=${uniswapFactoryAddress}&topic0=${topic0}&apikey=${etherscanApiKey}`;
+  const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=0&toBlock=latest&address=${uniswapFactoryAddress}&apikey=${etherscanApiKey}`;
 
   try {
     const response = await fetch(apiUrl);
