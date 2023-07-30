@@ -88,6 +88,17 @@
         .hidden-address {
       display: none;
     }
+        .contract-code {
+      font-family: monospace;
+      white-space: pre-wrap;
+      font-size: 14px;
+      color: #444;
+      margin-top: 10px;
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+    }
   </style>
 </head>
 <body>
@@ -170,7 +181,9 @@
       tokens.reverse().forEach(async token => {
         const li = document.createElement("li");
         const formattedAddress = formatAddress(token);
-       if (formattedAddress === "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2") {
+
+        // Skip specific address (Ethereum)
+        if (formattedAddress === "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2") {
           return;
         }
 
@@ -194,12 +207,42 @@
               ${tokenInfo.website ? `<a href="${tokenInfo.website}" target="_blank">Official Website</a>` : ""}
             </div>
           `;
+
+          // Fetch contract code and display it
+          const contractCode = await fetchContractCode(token);
+          if (contractCode) {
+            li.innerHTML += `
+              <div class="contract-code">
+                Contract Code:<br>
+                ${contractCode}
+              </div>
+            `;
+          }
         }
 
         ul.appendChild(li);
       });
 
       tokenListDiv.appendChild(ul);
+    }
+
+    async function fetchContractCode(address) {
+      const apiUrl = `https://api.etherscan.io/api?module=proxy&action=eth_getCode&address=${address}&apikey=${etherscanApiKey}`;
+
+      try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+
+        if (data.result) {
+          return data.result;
+        } else {
+          console.error("Error fetching contract code:", data);
+          return null;
+        }
+      } catch (error) {
+        console.error("Error fetching contract code:", error);
+        return null;
+      }
     }
 
     async function fetchBlockTimestamp(address) {
