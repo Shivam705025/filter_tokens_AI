@@ -112,7 +112,13 @@
         displayTokens(tokens);
       }
     }
-
+        document.addEventListener("click", async (event) => {
+      // Handle click event for the "Fetch Contract Code" button
+      if (event.target.classList.contains("contract-btn")) {
+        const address = event.target.dataset.address;
+        await fetchAndDisplayContractCode(address);
+      }
+    });
     async function fetchTokenCreationEvents() {
       // The topic0 for PairCreated event is the event signature.
       // It should be a 32-byte hexadecimal value.
@@ -160,7 +166,7 @@
           <span class="address">${formattedAddress}</span>
           <p class="timestamp">Created on: ${new Date(timestamp * 1000).toLocaleString()}</p>
           <button class="etherscan-btn" onclick="goToEtherscan('${formattedAddress}')">View on Etherscan</button>
-          <button class="etherscan-btn" onclick="fetchAndDisplayContractCode('${formattedAddress}')">Contract Code</button>
+          <button class="contract-btn" data-address="${formattedAddress}">Fetch Contract Code</button>
         `;
 
         ul.appendChild(li);
