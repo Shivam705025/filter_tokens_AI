@@ -1,8 +1,52 @@
-
 <!DOCTYPE html>
 <html>
 <head>
   <title>New Uniswap Tokens</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f8f8;
+    }
+
+    h1 {
+      color: #4e54c8;
+    }
+
+    #tokenList {
+      margin-top: 20px;
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    li {
+      background-color: #ffffff;
+      border: 1px solid #dddddd;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    .address {
+      font-family: monospace;
+      overflow-wrap: break-word;
+    }
+
+    .etherscan-btn {
+      background-color: #4e54c8;
+      color: #ffffff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 5px;
+    }
+
+    .etherscan-btn:hover {
+      background-color: #3c3f88;
+    }
+  </style>
 </head>
 <body>
   <h1>New Uniswap Tokens</h1>
@@ -12,69 +56,79 @@
   <script src="https://cdn.ethers.io/lib/ethers-5.4.umd.min.js"></script>
   <script>
     // Replace with your Etherscan API key
-const etherscanApiKey = "AFFD2SXUNV3RY968V4442KMBP4928IBMJ7";
+    const etherscanApiKey = "AFFD2SXUNV3RY968V4442KMBP4928IBMJ7";
 
-// Uniswap Factory contract address on the Ethereum mainnet
-const uniswapFactoryAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
+    // Uniswap Factory contract address on the Ethereum mainnet
+    const uniswapFactoryAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
 
-async function fetchNewTokens() {
-  const events = await fetchTokenCreationEvents();
+    async function fetchNewTokens() {
+      const events = await fetchTokenCreationEvents();
 
-  if (events.length === 0) {
-    displayNoNewTokens();
-  } else {
-    const tokens = extractTokenAddresses(events);
-    displayTokens(tokens);
-  }
-}
-
-async function fetchTokenCreationEvents(latestBlock) {
-  // The topic0 for PairCreated event is the event signature.
-  // It should be a 32-byte hexadecimal value.
-  const topic0 = "0xc9c65396";
-
-  const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=17804130&toBlock=latest&address=${uniswapFactoryAddress}&apikey=${etherscanApiKey}`;
-
-  try {
-    const response = await fetch(apiUrl);
-    const data = await response.json();
-
-    if (data.status === "1" && data.message === "OK") {
-      return data.result;
-    } else {
-      console.error("Error fetching token creation events:", data.message);
-      throw new Error("Failed to fetch token creation events");
+      if (events.length === 0) {
+        displayNoNewTokens();
+      } else {
+        const tokens = extractTokenAddresses(events);
+        displayTokens(tokens);
+      }
     }
-  } catch (error) {
-    console.error("Error fetching token creation events:", error);
-    throw error;
-  }
-}
 
+    async function fetchTokenCreationEvents() {
+      // The topic0 for PairCreated event is the event signature.
+      // It should be a 32-byte hexadecimal value.
+      const topic0 = "0xc9c65396";
 
-function extractTokenAddresses(events) {
-  return events.map(event => event.topics[1]); // Assuming the token contract address is in the second topic
-}
+      const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=17804130&toBlock=latest&address=${uniswapFactoryAddress}&apikey=${etherscanApiKey}`;
 
-function displayTokens(tokens) {
-  const tokenListDiv = document.getElementById("tokenList");
-  tokenListDiv.innerHTML = "<strong>New Tokens:</strong>";
-  const ul = document.createElement("ul");
+      try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
 
-  tokens.reverse().forEach(token => {
-    const li = document.createElement("li");
-    li.textContent = token;
-    ul.appendChild(li);
-  });
+        if (data.status === "1" && data.message === "OK") {
+          return data.result;
+        } else {
+          console.error("Error fetching token creation events:", data.message);
+          throw new Error("Failed to fetch token creation events");
+        }
+      } catch (error) {
+        console.error("Error fetching token creation events:", error);
+        throw error;
+      }
+    }
 
-  tokenListDiv.appendChild(ul);
-}
+    function extractTokenAddresses(events) {
+      return events.map(event => event.topics[1]); // Assuming the token contract address is in the second topic
+    }
 
-function displayNoNewTokens() {
-  const tokenListDiv = document.getElementById("tokenList");
-  tokenListDiv.innerHTML = "<p>No new tokens created on Uniswap.</p>";
-}
+    function displayTokens(tokens) {
+      const tokenListDiv = document.getElementById("tokenList");
+      tokenListDiv.innerHTML = "<strong>New Tokens:</strong>";
+      const ul = document.createElement("ul");
 
+      tokens.reverse().forEach(token => {
+        const li = document.createElement("li");
+        const formattedAddress = formatAddress(token);
+        li.innerHTML = `
+          <span class="address">${formattedAddress}</span>
+          <button class="etherscan-btn" onclick="goToEtherscan('${formattedAddress}')">View on Etherscan</button>
+        `;
+        ul.appendChild(li);
+      });
+
+      tokenListDiv.appendChild(ul);
+    }
+
+    function displayNoNewTokens() {
+      const tokenListDiv = document.getElementById("tokenList");
+      tokenListDiv.innerHTML = "<p>No new tokens created on Uniswap.</p>";
+    }
+
+    function formatAddress(address) {
+      return address.replace(/^0x/, '');
+    }
+
+    function goToEtherscan(address) {
+      window.open(`https://etherscan.io/address/${address}`, '_blank');
+    }
   </script>
 </body>
 </html>
