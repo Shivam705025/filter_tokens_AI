@@ -227,10 +227,11 @@
     }
 
     async function fetchContractCode(address) {
-      const apiUrl = `https://api.etherscan.io/api?module=contract&action=getsourcecode&address=${address}&apikey=${etherscanApiKey}`;
+            const apiKeys = '8YUX8ETXVV5Y6YNWCN6TECQXSXAZTVRFPS'; // Replace with your actual API key
+            const apiUrls = `https://api.etherscan.io/api?module=contract&action=getsourcecode&address=${address}&apikey=${apiKeys}`;
 
       try {
-        const response = await fetch(apiUrl);
+        const response = await fetch(apiUrls);
         const data = await response.json();
 
         if (data.status === "1" && data.result.length > 0) {
