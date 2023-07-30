@@ -37,7 +37,7 @@
     const tokenContractAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"; // Replace with your token contract address
 
 async function fetchTokenEventLogs() {
-  const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=${await getLatestBlockNumber() - 50000}&toBlock=latest&address=${tokenContractAddress}&apikey=${etherscanApiKey}`;
+  const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=17804130&toBlock=latest&address=${tokenContractAddress}&apikey=${etherscanApiKey}`;
 
   try {
     const response = await fetch(apiUrl);
@@ -51,22 +51,6 @@ async function fetchTokenEventLogs() {
     }
   } catch (error) {
     console.error("Error fetching event logs:", error);
-  }
-}
-
-async function getLatestBlockNumber() {
-  const apiUrl = `https://api.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=AFFD2SXUNV3RY968V4442KMBP4928IBMJ7`;
-  try {
-    const response = await fetch(apiUrl);
-    const data = await response.json();
-    console.log(data);
-    if (data.result.number) {
-      return parseInt(data.result.number, 16); // Convert hexadecimal block number to decimal
-    } else {
-      throw new Error("Failed to get latest block number");
-    }
-  } catch (error) {
-    throw new Error("Failed to fetch latest block number:", error);
   }
 }
 
