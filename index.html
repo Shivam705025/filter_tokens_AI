@@ -66,24 +66,25 @@ async function fetchTokenEventLogs() {
       return `${ageInSeconds} secs ago`;
     }
 
-        async function fetchTransactionInfo(transactionHash) {
-      const apiUrl = `https://api.etherscan.io/api?module=proxy&action=getTransactionByHash&txhash=${transactionHash}&apikey=${etherscanApiKey}`;
+async function fetchTransactionInfo(transactionHash) {
+  const corsProxyUrl = "https://cors-anywhere.herokuapp.com/";
+  const apiUrl = `https://api.etherscan.io/api?module=proxy&action=getTransactionByHash&txhash=${transactionHash}&apikey=${etherscanApiKey}`;
 
-      try {
-        const response = await fetch(apiUrl);
-        const data = await response.json();
+  try {
+    const response = await fetch(corsProxyUrl + apiUrl);
+    const data = await response.json();
 
-        if (data.status === "1") {
-          return data.result;
-        } else {
-          console.error("Error fetching transaction info:", data.message);
-          return null;
-        }
-      } catch (error) {
-        console.error("Error fetching transaction info:", error);
-        return null;
-      }
+    if (data.status === "1") {
+      return data.result;
+    } else {
+      console.error("Error fetching transaction info:", data.message);
+      return null;
     }
+  } catch (error) {
+    console.error("Error fetching transaction info:", error);
+    return null;
+  }
+}
 
     async function displayTransactionInfo(transactionHash) {
       const transactionInfo = await fetchTransactionInfo(transactionHash);
