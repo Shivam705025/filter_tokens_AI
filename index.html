@@ -37,7 +37,7 @@
     const tokenContractAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"; // Replace with your token contract address
 
     async function fetchTokenEventLogs() {
-      const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=latest&toBlock=0&address=${tokenContractAddress}&apikey=${etherscanApiKey}`;
+      const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=10260818&toBlock=latest&address=${tokenContractAddress}&apikey=${etherscanApiKey}`;
 
       try {
         const response = await fetch(apiUrl);
