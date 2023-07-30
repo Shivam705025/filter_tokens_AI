@@ -101,11 +101,17 @@
       <h3>Contract Code</h3>
       <textarea class="contract-code" id="contractCodeTextArea" readonly></textarea>
     </div>
+    <div class="token-info-section" id="tokenInfoSection">
+      <h3>Token Information</h3>
+      <p class="token-info" id="tokenName"></p>
+      <p class="token-info" id="tokenSymbol"></p>
+      <p class="token-info" id="tokenTotalSupply"></p>
+    </div>
   </div>
 
   <script src="https://cdn.ethers.io/lib/ethers-5.4.umd.min.js"></script>
   <script>
-    const etherscanApiKey = "AFFD2SXUNV3RY968V4442KMBP4928IBMJ7";
+    const etherscanApiKey = "YOUR_ETHERSCAN_API_KEY";
     const uniswapFactoryAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
 
     async function fetchNewTokens() {
@@ -144,7 +150,7 @@
       return events.map(event => event.topics[1]);
     }
 
-    function displayTokens(tokens) {
+    async function displayTokens(tokens) {
       const tokenList = document.getElementById("tokenList");
       tokenList.innerHTML = "";
 
@@ -165,6 +171,7 @@
           <p class="timestamp">Created on: ${timestampStr}</p>
           <button class="button" onclick="goToEtherscan('${formattedAddress}')">View on Etherscan</button>
           <button class="button contract-btn" onclick="fetchAndDisplayContractCode('${formattedAddress}')">Fetch Contract Code</button>
+          <button class="button token-info-btn" onclick="fetchAndDisplayTokenInfo('${formattedAddress}')">Fetch Token Info</button>
         `;
 
         tokenList.appendChild(li);
@@ -248,6 +255,64 @@
         }
       } catch (error) {
         console.error("Error fetching contract source code:", error);
+        return null;
+      }
+    }
+
+    async function fetchAndDisplayTokenInfo(address) {
+      const tokenInfo = await fetchTokenInfo(address);
+      if (tokenInfo) {
+        const tokenInfoSection = document.getElementById("tokenInfoSection");
+        tokenInfoSection.classList.add("show");
+
+        const tokenNameElement = document.getElementById("tokenName");
+        const tokenSymbolElement = document.getElementById("tokenSymbol");
+        const tokenTotalSupplyElement = document.getElementById("tokenTotalSupply");
+
+        tokenNameElement.textContent = "Token Name: " + tokenInfo.name;
+        tokenSymbolElement.textContent = "Token Symbol: " + tokenInfo.symbol;
+        tokenTotalSupplyElement.textContent = "Total Supply: " + tokenInfo.totalSupply;
+      } else {
+        const tokenInfoSection = document.getElementById("tokenInfoSection");
+        tokenInfoSection.classList.remove("show");
+
+        const modal = document.createElement("div");
+        modal.classList.add("modal");
+
+        const closeButton = document.createElement("span");
+        closeButton.classList.add("close");
+        closeButton.innerHTML = "&times;";
+        closeButton.addEventListener("click", () => {
+          document.body.removeChild(modal);
+        });
+
+        const message = document.createElement("p");
+        message.textContent = "Token information not available.";
+
+        modal.appendChild(closeButton);
+        modal.appendChild(message);
+
+        document.body.appendChild(modal);
+      }
+    }
+
+    async function fetchTokenInfo(address) {
+      const ethersProvider = new ethers.providers.JsonRpcProvider();
+      const contract = new ethers.Contract(address, [
+        // The ERC20 standard ABI (simplified for this example)
+        "function name() view returns (string)",
+        "function symbol() view returns (string)",
+        "function totalSupply() view returns (uint256)"
+      ], ethersProvider);
+
+      try {
+        const name = await contract.name();
+        const symbol = await contract.symbol();
+        const totalSupply = await contract.totalSupply();
+
+        return { name, symbol, totalSupply };
+      } catch (error) {
+        console.error("Error fetching token info:", error);
         return null;
       }
     }
