@@ -27,8 +27,12 @@ async function fetchNewTokens() {
   }
 }
 
-async function fetchTokenCreationEvents() {
-  const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=17804130&toBlock=latest&address=${uniswapFactoryAddress}&topic0=0xc9c65396&apikey=${etherscanApiKey}`;
+async function fetchTokenCreationEvents(latestBlock) {
+  // The topic0 for PairCreated event is the event signature.
+  // It should be a 32-byte hexadecimal value.
+  const topic0 = "0xc9c65396";
+
+  const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=${latestBlock}&toBlock=${latestBlock}&address=${uniswapFactoryAddress}&topic0=${topic0}&apikey=${etherscanApiKey}`;
 
   try {
     const response = await fetch(apiUrl);
@@ -45,6 +49,7 @@ async function fetchTokenCreationEvents() {
     throw error;
   }
 }
+
 
 function extractTokenAddresses(events) {
   return events.map(event => event.topics[1]); // Assuming the token contract address is in the second topic
