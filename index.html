@@ -61,7 +61,7 @@ function displayTokens(tokens) {
   tokenListDiv.innerHTML = "<strong>New Tokens:</strong>";
   const ul = document.createElement("ul");
 
-  tokens.forEach(token => {
+  tokens.reverse().forEach(token => {
     const li = document.createElement("li");
     li.textContent = token;
     ul.appendChild(li);
