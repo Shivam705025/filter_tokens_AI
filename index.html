@@ -10,6 +10,48 @@
       padding: 0;
     }
 
+        /* Style for the "Fetch Contract Code" button */
+    .fetch-contract-btn {
+      background-color: #ff6b6b; /* Use a different color */
+      color: #ffffff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 5px;
+      display: block;
+      margin: 10px auto;
+    }
+
+    .fetch-contract-btn:hover {
+      background-color: #e24e4e; /* Darker color on hover */
+    }
+
+    /* Style for the contract code section */
+    .contract-code-section {
+      display: none;
+      margin-top: 20px;
+    }
+
+    .contract-code-section.show {
+      display: block;
+    }
+
+    /* Style for the contract code text area */
+    .contract-code {
+      width: 100%;
+      height: 200px;
+      resize: none;
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 14px;
+      color: #444;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+
     h1 {
       color: #4e54c8;
       text-align: center;
@@ -93,6 +135,10 @@
     <button class="fetch-btn" onclick="fetchNewTokens()">Fetch New Tokens</button>
     <div id="tokenList"></div>
   </div>
+      <div class="contract-code-section" id="contractCodeSection">
+      <h3>Contract Code</h3>
+      <textarea class="contract-code" id="contractCodeTextArea" readonly></textarea>
+    </div>
 
   <script src="https://cdn.ethers.io/lib/ethers-5.4.umd.min.js"></script>
   <script>
@@ -206,31 +252,17 @@
     function goToEtherscan(address) {
       window.open(`https://etherscan.io/address/${address}`, '_blank');
     }
-            async function fetchAndDisplayContractCode(address) {
+                async function fetchAndDisplayContractCode(address) {
       const contractCode = await fetchContractCode(address);
       if (contractCode) {
-        // Display the contract code in a modal
-        const modal = document.createElement("div");
-        modal.classList.add("modal");
+        // Display the contract code section
+        const contractCodeSection = document.getElementById("contractCodeSection");
+        contractCodeSection.classList.add("show");
 
-        const closeButton = document.createElement("span");
-        closeButton.classList.add("close");
-        closeButton.innerHTML = "&times;";
-        closeButton.addEventListener("click", () => {
-          document.body.removeChild(modal);
-        });
-
-        const codeTextArea = document.createElement("textarea");
-        codeTextArea.classList.add("code-editor");
-        codeTextArea.value = contractCode;
-        codeTextArea.readOnly = true;
-
-        modal.appendChild(closeButton);
-        modal.appendChild(codeTextArea);
-
-        document.body.appendChild(modal);
-      }
-       else {
+        // Display the contract code in the text area
+        const contractCodeTextArea = document.getElementById("contractCodeTextArea");
+        contractCodeTextArea.value = contractCode;
+      } else {
     // Contract code not available or not verified
     const modal = document.createElement("div");
     modal.classList.add("modal");
