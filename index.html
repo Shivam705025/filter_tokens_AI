@@ -55,7 +55,7 @@ async function fetchTokenEventLogs() {
 }
 
 async function getLatestBlockNumber() {
-  const apiUrl = `https://api.etherscan.io/api?module=proxy&action=getBlockByNumber&tag=latest&apikey=${etherscanApiKey}`;
+  const apiUrl = `https://api.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=AFFD2SXUNV3RY968V4442KMBP4928IBMJ7`;
   try {
     const response = await fetch(apiUrl);
     const data = await response.json();
