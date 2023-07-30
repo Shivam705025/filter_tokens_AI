@@ -9,7 +9,6 @@
       margin: 0;
       padding: 0;
     }
-    
 
     h1 {
       color: #4e54c8;
@@ -86,71 +85,6 @@
     .fetch-btn:hover {
       background-color: #3442a6;
     }
-        .hidden-address {
-      display: none;
-    }
-        .contract-code {
-      font-family: monospace;
-      white-space: pre-wrap;
-      font-size: 14px;
-      color: #444;
-      margin-top: 10px;
-      border: 1px solid #ddd;
-      padding: 10px;
-      border-radius: 5px;
-      background-color: #f9f9f9;
-    }
-        .modal {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.7);
-      z-index: 999;
-    }
-
-    /* Style for the modal close button */
-    .close {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      font-size: 20px;
-      cursor: pointer;
-      color: #fff;
-    }
-
-    /* Style for the code editor textarea */
-    .code-editor {
-      width: 80%;
-      height: 70%;
-      resize: none;
-      background-color: #f9f9f9;
-      border: 1px solid #ddd;
-      padding: 10px;
-      font-family: monospace;
-      font-size: 14px;
-      color: #444;
-      border-radius: 5px;
-    }
-        .contract-btn {
-      background-color: #4e54c8;
-      color: #ffffff;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-top: 5px;
-      display: block;
-      margin: 10px auto;
-    }
-
-    .contract-btn:hover {
-      background-color: #3c3f88;
-    }
   </style>
 </head>
 <body>
@@ -206,26 +140,7 @@
       return events.map(event => event.topics[1]); // Assuming the token contract address is in the second topic
     }
 
-    async function fetchTokenInfo(address) {
-      const apiUrl = `https://api.etherscan.io/api?module=token&action=tokeninfo&contractaddress=${address}&apikey=${etherscanApiKey}`;
-
-      try {
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-
-        if (data.status === "1" && data.result) {
-          return data.result;
-        } else {
-          console.error("Error fetching token info:", data);
-          return null;
-        }
-      } catch (error) {
-        console.error("Error fetching token info:", error);
-        return null;
-      }
-    }
-
-    async function displayTokens(tokens) {
+    function displayTokens(tokens) {
       const tokenListDiv = document.getElementById("tokenList");
       tokenListDiv.innerHTML = "<strong>New Tokens:</strong>";
       const ul = document.createElement("ul");
@@ -234,75 +149,19 @@
         const li = document.createElement("li");
         const formattedAddress = formatAddress(token);
 
-        // Skip specific address (Ethereum)
-        if (formattedAddress === "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2") {
-          return;
-        }
-
         // Fetch the block timestamp for each token creation event
         const timestamp = await fetchBlockTimestamp(token);
 
-        // Fetch token info and display additional details
-        const tokenInfo = await fetchTokenInfo(token);
-        if (tokenInfo) {
         li.innerHTML = `
           <span class="address">${formattedAddress}</span>
           <p class="timestamp">Created on: ${new Date(timestamp * 1000).toLocaleString()}</p>
           <button class="etherscan-btn" onclick="goToEtherscan('${formattedAddress}')">View on Etherscan</button>
-          <button class="contract-btn" onclick="fetchAndDisplayContractCode('${formattedAddress}')">Fetch Contract Code</button>
         `;
-        }
 
         ul.appendChild(li);
       });
 
       tokenListDiv.appendChild(ul);
-    }
-        async function fetchAndDisplayContractCode(address) {
-      const contractCode = await fetchContractCode(address);
-      if (contractCode) {
-        // Display the contract code in a modal
-        const modal = document.createElement("div");
-        modal.classList.add("modal");
-
-        const closeButton = document.createElement("span");
-        closeButton.classList.add("close");
-        closeButton.innerHTML = "&times;";
-        closeButton.addEventListener("click", () => {
-          document.body.removeChild(modal);
-        });
-
-        const codeTextArea = document.createElement("textarea");
-        codeTextArea.classList.add("code-editor");
-        codeTextArea.value = contractCode;
-        codeTextArea.readOnly = true;
-
-        modal.appendChild(closeButton);
-        modal.appendChild(codeTextArea);
-
-        document.body.appendChild(modal);
-      }
-    }
-
-    async function fetchContractCode(address) {
-            const apiKeys = '8YUX8ETXVV5Y6YNWCN6TECQXSXAZTVRFPS'; // Replace with your actual API key
-            const apiUrls = `https://api.etherscan.io/api?module=contract&action=getsourcecode&address=${address}&apikey=${apiKeys}`;
-
-      try {
-        const response = await fetch(apiUrls);
-        const data = await response.json();
-
-        if (data.status === "1" && data.result.length > 0) {
-          // Assuming the first result contains the contract source code
-          return data.result[0].SourceCode;
-        } else {
-          console.error("Error fetching contract source code:", data);
-          return null;
-        }
-      } catch (error) {
-        console.error("Error fetching contract source code:", error);
-        return null;
-      }
     }
 
     async function fetchBlockTimestamp(address) {
