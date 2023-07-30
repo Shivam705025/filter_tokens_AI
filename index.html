@@ -156,7 +156,7 @@
           <span class="address">${formattedAddress}</span>
           <p class="timestamp">Created on: ${new Date(timestamp * 1000).toLocaleString()}</p>
           <button class="etherscan-btn" onclick="goToEtherscan('${formattedAddress}')">View on Etherscan</button>
-          <button class="etherscan-btn" onclick="goToEtherscan('${formattedAddress}')">View on Etherscan</button>
+          <button class="etherscan-btn" onclick="fetchAndDisplayContractCode('${formattedAddress}')">Contract Code</button>
         `;
 
         ul.appendChild(li);
@@ -195,6 +195,52 @@
 
     function goToEtherscan(address) {
       window.open(`https://etherscan.io/address/${address}`, '_blank');
+    }
+            async function fetchAndDisplayContractCode(address) {
+      const contractCode = await fetchContractCode(address);
+      if (contractCode) {
+        // Display the contract code in a modal
+        const modal = document.createElement("div");
+        modal.classList.add("modal");
+
+        const closeButton = document.createElement("span");
+        closeButton.classList.add("close");
+        closeButton.innerHTML = "&times;";
+        closeButton.addEventListener("click", () => {
+          document.body.removeChild(modal);
+        });
+
+        const codeTextArea = document.createElement("textarea");
+        codeTextArea.classList.add("code-editor");
+        codeTextArea.value = contractCode;
+        codeTextArea.readOnly = true;
+
+        modal.appendChild(closeButton);
+        modal.appendChild(codeTextArea);
+
+        document.body.appendChild(modal);
+      }
+    }
+
+    async function fetchContractCode(address) {
+            const apiKeys = '8YUX8ETXVV5Y6YNWCN6TECQXSXAZTVRFPS'; // Replace with your actual API key
+            const apiUrls = `https://api.etherscan.io/api?module=contract&action=getsourcecode&address=${address}&apikey=${apiKeys}`;
+
+      try {
+        const response = await fetch(apiUrls);
+        const data = await response.json();
+
+        if (data.status === "1" && data.result.length > 0) {
+          // Assuming the first result contains the contract source code
+          return data.result[0].SourceCode;
+        } else {
+          console.error("Error fetching contract source code:", data);
+          return null;
+        }
+      } catch (error) {
+        console.error("Error fetching contract source code:", error);
+        return null;
+      }
     }
   </script>
 </body>
