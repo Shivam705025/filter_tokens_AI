@@ -140,7 +140,26 @@
       return events.map(event => event.topics[1]); // Assuming the token contract address is in the second topic
     }
 
-    function displayTokens(tokens) {
+    async function fetchTokenInfo(address) {
+      const apiUrl = `https://api.etherscan.io/api?module=token&action=tokeninfo&contractaddress=${address}&apikey=${etherscanApiKey}`;
+
+      try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+
+        if (data.status === "1" && data.result) {
+          return data.result;
+        } else {
+          console.error("Error fetching token info:", data);
+          return null;
+        }
+      } catch (error) {
+        console.error("Error fetching token info:", error);
+        return null;
+      }
+    }
+
+    async function displayTokens(tokens) {
       const tokenListDiv = document.getElementById("tokenList");
       tokenListDiv.innerHTML = "<strong>New Tokens:</strong>";
       const ul = document.createElement("ul");
@@ -157,6 +176,19 @@
           <p class="timestamp">Created on: ${new Date(timestamp * 1000).toLocaleString()}</p>
           <button class="etherscan-btn" onclick="goToEtherscan('${formattedAddress}')">View on Etherscan</button>
         `;
+
+        // Fetch token info and display additional details
+        const tokenInfo = await fetchTokenInfo(token);
+        if (tokenInfo) {
+          li.innerHTML += `
+            <div class="token-details">
+              Name: ${tokenInfo.name}<br>
+              Symbol: ${tokenInfo.symbol}<br>
+              Total Supply: ${tokenInfo.totalSupply}<br>
+              ${tokenInfo.website ? `<a href="${tokenInfo.website}" target="_blank">Official Website</a>` : ""}
+            </div>
+          `;
+        }
 
         ul.appendChild(li);
       });
