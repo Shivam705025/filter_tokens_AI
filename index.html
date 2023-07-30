@@ -1,174 +1,69 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Token Event Logs</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-    }
-
-    h1 {
-      margin-bottom: 20px;
-    }
-
-    table {
-      border-collapse: collapse;
-      width: 100%;
-    }
-
-    th, td {
-      padding: 10px;
-      border-bottom: 1px solid #ccc;
-      text-align: left;
-    }
-
-    th {
-      background-color: #f2f2f2;
-    }
-  </style>
+  <title>Fetch Token Info by Transaction Hash</title>
 </head>
 <body>
-  <h1>Token Event Logs</h1>
-  <div id="logs"></div>
+  <h1>Fetch Token Info by Transaction Hash</h1>
+  <label for="txHash">Enter Transaction Hash:</label>
+  <input type="text" id="txHash" />
+  <button onclick="fetchTokenInfo()">Fetch Token Info</button>
+  <div id="tokenInfo"></div>
 
   <script>
-    // Replace with your Etherscan API key and token contract address
+    // Replace with your Etherscan API key
     const etherscanApiKey = "AFFD2SXUNV3RY968V4442KMBP4928IBMJ7";
-    const tokenContractAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"; // Replace with your token contract address
 
-    async function fetchTokenEventLogs() {
-      const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=17804130&toBlock=latest&address=${tokenContractAddress}&apikey=${etherscanApiKey}`;
+    async function fetchTokenInfo() {
+      const txHashInput = document.getElementById("txHash").value;
+      const apiUrl = `https://api.etherscan.io/api?module=proxy&action=getTransactionByHash&txhash=${txHashInput}&apikey=${etherscanApiKey}`;
 
       try {
         const response = await fetch(apiUrl);
         const data = await response.json();
 
-        if (data.status === "1" && data.message === "OK") {
-          const sortedLogs = data.result.sort((a, b) => b.blockNumber - a.blockNumber); // Sort in descending order
-          displayEventLogs(sortedLogs);
-        } else {
-          console.error("Error fetching event logs:", data.message);
-        }
-      } catch (error) {
-        console.error("Error fetching event logs:", error);
-      }
-    }
-
-    function formatTimestamp(timestamp) {
-      const date = new Date(timestamp * 1000);
-      return date.toLocaleString();
-    }
-
-    function calculateAge(timestamp) {
-      const currentTimestamp = Math.floor(Date.now() / 1000);
-      const ageInSeconds = currentTimestamp - timestamp;
-      return `${ageInSeconds} secs ago`;
-    }
-
-    async function fetchTransactionInfo(transactionHash) {
-      const corsProxyUrl = "https://cors-anywhere.herokuapp.com/";
-      const apiUrl = `https://api.etherscan.io/api?module=proxy&action=getTransactionByHash&txhash=${transactionHash}&apikey=${etherscanApiKey}`;
-
-      try {
-        const response = await fetch(corsProxyUrl + apiUrl);
-        const data = await response.json();
-
         if (data.status === "1") {
-          return data.result;
+          const tokenInfo = extractTokenInfo(data.result);
+          displayTokenInfo(tokenInfo);
         } else {
-          console.error("Error fetching transaction info:", data.message);
-          return null;
+          console.error("Error fetching token info:", data.message);
+          displayError("Error fetching token info.");
         }
       } catch (error) {
-        console.error("Error fetching transaction info:", error);
-        return null;
+        console.error("Error fetching token info:", error);
+        displayError("Error fetching token info.");
       }
     }
 
-    async function displayTransactionInfo(transactionHash) {
-      const transactionInfo = await fetchTransactionInfo(transactionHash);
-      if (transactionInfo) {
-        const transactionInfoText = JSON.stringify(transactionInfo, null, 2);
-        const transactionInfoBox = document.createElement("textarea");
-        transactionInfoBox.value = transactionInfoText;
-        transactionInfoBox.setAttribute("readonly", "true");
-        transactionInfoBox.style.width = "100%";
-        transactionInfoBox.style.height = "150px";
-        transactionInfoBox.style.marginTop = "10px";
-        transactionInfoBox.style.resize = "none";
+    function extractTokenInfo(transactionInfo) {
+      // Assuming token transfer event's `input` field contains the token contract address,
+      // token transfer method signature, and the recipient's address.
+      const input = transactionInfo.input;
+      const tokenContractAddress = input.slice(34, 74); // Assuming the contract address is between the 35th and 74th characters of the input
+      const toAddress = "0x" + input.slice(74, 114); // Assuming the recipient address is between the 75th and 114th characters of the input
 
-        const logsDiv = document.getElementById("logs");
-        logsDiv.appendChild(transactionInfoBox);
-      }
+      return {
+        tokenContractAddress: tokenContractAddress,
+        toAddress: toAddress,
+        transactionHash: transactionInfo.hash,
+        blockNumber: transactionInfo.blockNumber,
+      };
     }
 
-    function getMethodNameFromTopics(topics) {
-      // The method name (signature) is the first topic (topics[0])
-      const methodName = topics[0];
-      return methodName;
+    function displayTokenInfo(tokenInfo) {
+      const tokenInfoDiv = document.getElementById("tokenInfo");
+      tokenInfoDiv.innerHTML = `
+        <p><strong>Token Contract Address:</strong> ${tokenInfo.tokenContractAddress}</p>
+        <p><strong>Recipient Address:</strong> ${tokenInfo.toAddress}</p>
+        <p><strong>Transaction Hash:</strong> ${tokenInfo.transactionHash}</p>
+        <p><strong>Block Number:</strong> ${tokenInfo.blockNumber}</p>
+      `;
     }
 
-    // Add this helper function to decode topics
-    function decodeTopic(topic) {
-      // Remove the "0x" prefix and decode the topic as a hexadecimal value
-      return parseInt(topic.slice(2), 16);
+    function displayError(message) {
+      const tokenInfoDiv = document.getElementById("tokenInfo");
+      tokenInfoDiv.innerHTML = `<p style="color: red;">${message}</p>`;
     }
-
-    function getLogInfo(eventLog) {
-      const methodName = getMethodNameFromTopics(eventLog.topics);
-      const topic0Decoded = decodeTopic(eventLog.topics[0]);
-      const topic1Decoded = decodeTopic(eventLog.topics[1]);
-      const topic2Decoded = decodeTopic(eventLog.topics[2]);
-
-      if (methodName === "0xc9c65396") {
-        // PairCreated event
-        const logInfo = `PairCreated (index_topic_1 address token0, index_topic_2 address token1, address pair, uint256 noname)\n`;
-        const topic0 = `[topic0] ${eventLog.topics[0]} (${topic0Decoded})\n`;
-        const topic1 = `[topic1] ${eventLog.topics[1]} (${topic1Decoded})\n`;
-        const topic2 = `[topic2] ${eventLog.topics[2]} (${topic2Decoded})\n`;
-        const data = `${JSON.stringify(eventLog.data, null, 2)}\n`;
-
-        return logInfo + topic0 + topic1 + topic2 + data;
-      } else {
-        // Other events
-        const logInfo = `${methodName}\n`;
-        const topic0 = `[topic0] ${eventLog.topics[0]} (${topic0Decoded})\n`;
-        const topic1 = `[topic1] ${eventLog.topics[1]} (${topic1Decoded})\n`;
-        const topic2 = `[topic2] ${eventLog.topics[2]} (${topic2Decoded})\n`;
-        const data = `${JSON.stringify(eventLog.data, null, 2)}\n`;
-
-        return logInfo + topic0 + topic1 + topic2 + data;
-      }
-    }
-
-    async function displayEventLogs(eventLogs) {
-      const logsDiv = document.getElementById("logs");
-      if (eventLogs.length === 0) {
-        logsDiv.innerHTML = "No event logs found for the token.";
-      } else {
-        let html = "<table>";
-        html += "<tr><th>Txn Hash</th><th>Block</th><th>Age</th><th>Method</th><th>Logs</th></tr>";
-        eventLogs.forEach(eventLog => {
-          const methodName = getMethodNameFromTopics(eventLog.topics);
-          const formattedDate = formatTimestamp(eventLog.timeStamp);
-          const age = calculateAge(eventLog.timeStamp);
-          html += "<tr>";
-          html += `<td>${eventLog.transactionHash}</td>`;
-          html += `<td>${eventLog.blockNumber}</td>`;
-          html += `<td>${age}</td>`;
-          html += `<td>${methodName}</td>`;
-          html += `<td><pre>${getLogInfo(eventLog)}</pre></td>`;
-          html += "</tr>";
-
-          const transactionHash = eventLog.transactionHash;
-          displayTransactionInfo(transactionHash);
-        });
-        html += "</table>";
-        logsDiv.innerHTML = html;
-      }
-    }
-
-    fetchTokenEventLogs();
   </script>
 </body>
 </html>
