@@ -34,7 +34,7 @@
   <script>
     // Replace with your Etherscan API key and token contract address
     const etherscanApiKey = "AFFD2SXUNV3RY968V4442KMBP4928IBMJ7";
-    const tokenContractAddress = "0x24D7A1862a219Bb27af9cbbBE29d01F68461e9e7"; // Replace with your token contract address
+    const tokenContractAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"; // Replace with your token contract address
 
     async function fetchTokenEventLogs() {
       const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=0&toBlock=latest&address=${tokenContractAddress}&apikey=${etherscanApiKey}`;
@@ -44,7 +44,7 @@
         const data = await response.json();
 
         if (data.status === "1" && data.message === "OK") {
-          const sortedLogs = data.result.sort((a, b) => a.timeStamp - b.timeStamp); // Sort in ascending order based on timestamp
+          const sortedLogs = data.result.sort((a, b) => b.blockNumber - a.blockNumber); // Sort in descending order
           displayEventLogs(sortedLogs);
         } else {
           console.error("Error fetching event logs:", data.message);
