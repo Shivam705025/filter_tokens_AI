@@ -1,69 +1,94 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Fetch Token Info by Transaction Hash</title>
+  <title>New Uniswap Tokens</title>
 </head>
 <body>
-  <h1>Fetch Token Info by Transaction Hash</h1>
-  <label for="txHash">Enter Transaction Hash:</label>
-  <input type="text" id="txHash" />
-  <button onclick="fetchTokenInfo()">Fetch Token Info</button>
-  <div id="tokenInfo"></div>
+  <h1>New Uniswap Tokens</h1>
+  <button onclick="fetchNewTokens()">Fetch New Tokens</button>
+  <div id="tokenList"></div>
 
+  <script src="https://cdn.ethers.io/lib/ethers-5.4.umd.min.js"></script>
   <script>
     // Replace with your Etherscan API key
-    const etherscanApiKey = "AFFD2SXUNV3RY968V4442KMBP4928IBMJ7";
+const etherscanApiKey = "AFFD2SXUNV3RY968V4442KMBP4928IBMJ7";
 
-    async function fetchTokenInfo() {
-      const txHashInput = document.getElementById("txHash").value;
-      const apiUrl = `https://api.etherscan.io/api?module=proxy&action=getTransactionByHash&txhash=${txHashInput}&apikey=${etherscanApiKey}`;
+// Uniswap Factory contract address on the Ethereum mainnet
+const uniswapFactoryAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
 
-      try {
-        const response = await fetch(apiUrl);
-        const data = await response.json();
+async function fetchNewTokens() {
+  const latestBlock = await getLatestBlockNumber();
+  const events = await fetchTokenCreationEvents(latestBlock);
 
-        if (data.status === "1") {
-          const tokenInfo = extractTokenInfo(data.result);
-          displayTokenInfo(tokenInfo);
-        } else {
-          console.error("Error fetching token info:", data.message);
-          displayError("Error fetching token info.");
-        }
-      } catch (error) {
-        console.error("Error fetching token info:", error);
-        displayError("Error fetching token info.");
-      }
+  if (events.length === 0) {
+    displayNoNewTokens();
+  } else {
+    const tokens = extractTokenAddresses(events);
+    displayTokens(tokens);
+  }
+}
+
+async function getLatestBlockNumber() {
+  const apiUrl = `https://api.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=${etherscanApiKey}`;
+
+  try {
+    const response = await fetch(apiUrl);
+    const data = await response.json();
+
+    if (data.status === "1") {
+      return parseInt(data.result, 16);
+    } else {
+      console.error("Error fetching latest block number:", data.message);
+      throw new Error("Failed to fetch latest block number");
     }
+  } catch (error) {
+    console.error("Error fetching latest block number:", error);
+    throw error;
+  }
+}
 
-    function extractTokenInfo(transactionInfo) {
-      // Assuming token transfer event's `input` field contains the token contract address,
-      // token transfer method signature, and the recipient's address.
-      const input = transactionInfo.input;
-      const tokenContractAddress = input.slice(34, 74); // Assuming the contract address is between the 35th and 74th characters of the input
-      const toAddress = "0x" + input.slice(74, 114); // Assuming the recipient address is between the 75th and 114th characters of the input
+async function fetchTokenCreationEvents(latestBlock) {
+  const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=${latestBlock}&toBlock=${latestBlock}&address=${uniswapFactoryAddress}&topic0=0xc9c65396&apikey=${etherscanApiKey}`;
 
-      return {
-        tokenContractAddress: tokenContractAddress,
-        toAddress: toAddress,
-        transactionHash: transactionInfo.hash,
-        blockNumber: transactionInfo.blockNumber,
-      };
+  try {
+    const response = await fetch(apiUrl);
+    const data = await response.json();
+
+    if (data.status === "1" && data.message === "OK") {
+      return data.result;
+    } else {
+      console.error("Error fetching token creation events:", data.message);
+      throw new Error("Failed to fetch token creation events");
     }
+  } catch (error) {
+    console.error("Error fetching token creation events:", error);
+    throw error;
+  }
+}
 
-    function displayTokenInfo(tokenInfo) {
-      const tokenInfoDiv = document.getElementById("tokenInfo");
-      tokenInfoDiv.innerHTML = `
-        <p><strong>Token Contract Address:</strong> ${tokenInfo.tokenContractAddress}</p>
-        <p><strong>Recipient Address:</strong> ${tokenInfo.toAddress}</p>
-        <p><strong>Transaction Hash:</strong> ${tokenInfo.transactionHash}</p>
-        <p><strong>Block Number:</strong> ${tokenInfo.blockNumber}</p>
-      `;
-    }
+function extractTokenAddresses(events) {
+  return events.map(event => event.topics[1]); // Assuming the token contract address is in the second topic
+}
 
-    function displayError(message) {
-      const tokenInfoDiv = document.getElementById("tokenInfo");
-      tokenInfoDiv.innerHTML = `<p style="color: red;">${message}</p>`;
-    }
+function displayTokens(tokens) {
+  const tokenListDiv = document.getElementById("tokenList");
+  tokenListDiv.innerHTML = "<strong>New Tokens:</strong>";
+  const ul = document.createElement("ul");
+
+  tokens.forEach(token => {
+    const li = document.createElement("li");
+    li.textContent = token;
+    ul.appendChild(li);
+  });
+
+  tokenListDiv.appendChild(ul);
+}
+
+function displayNoNewTokens() {
+  const tokenListDiv = document.getElementById("tokenList");
+  tokenListDiv.innerHTML = "<p>No new tokens created on Uniswap.</p>";
+}
+
   </script>
 </body>
 </html>
