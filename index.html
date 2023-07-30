@@ -123,8 +123,7 @@
     }
 
     function formatAddress(address) {
-      address = address.slice(2);
-      return '0x' + address.replace(/^0x+/, '');
+      return address.replace(/^0x0+/, '0x');
     }
 
     function goToEtherscan(address) {
