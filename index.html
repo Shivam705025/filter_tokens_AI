@@ -227,8 +227,6 @@
     }
 
     async function fetchContractCode(address) {
-      const apiUrl = `https://api.etherscan.io/api?module=proxy&action=eth_getCode&address=${address}&apikey=${etherscanApiKey}`;
-
       const apiUrl = `https://api.etherscan.io/api?module=contract&action=getsourcecode&address=${address}&apikey=${etherscanApiKey}`;
 
       try {
