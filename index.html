@@ -69,14 +69,21 @@
     .fetch-btn:hover {
       background-color: #3c3f88;
     }
-
-    /* Style for the container div */
     .container {
       max-width: 600px;
       margin: 0 auto;
       padding: 20px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       background-color: #ffffff;
+            border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+        .timestamp {
+      font-size: 14px;
+      color: #777;
+    }
+    .fetch-btn:hover {
+      background-color: #3442a6;
     }
   </style>
 </head>
@@ -138,17 +145,42 @@
       tokenListDiv.innerHTML = "<strong>New Tokens:</strong>";
       const ul = document.createElement("ul");
 
-      tokens.reverse().forEach(token => {
+      tokens.reverse().forEach(async token => {
         const li = document.createElement("li");
         const formattedAddress = formatAddress(token);
+
+        // Fetch the block timestamp for each token creation event
+        const timestamp = await fetchBlockTimestamp(token);
+
         li.innerHTML = `
           <span class="address">${formattedAddress}</span>
+          <p class="timestamp">Created on: ${new Date(timestamp * 1000).toLocaleString()}</p>
           <button class="etherscan-btn" onclick="goToEtherscan('${formattedAddress}')">View on Etherscan</button>
         `;
+
         ul.appendChild(li);
       });
 
       tokenListDiv.appendChild(ul);
+    }
+
+    async function fetchBlockTimestamp(address) {
+      const apiUrl = `https://api.etherscan.io/api?module=proxy&action=eth_getBlockByNumber&tag=latest&boolean=true&apikey=${etherscanApiKey}`;
+
+      try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+
+        if (data.result && data.result.timestamp) {
+          return parseInt(data.result.timestamp, 16);
+        } else {
+          console.error("Error fetching block timestamp:", data);
+          return 0;
+        }
+      } catch (error) {
+        console.error("Error fetching block timestamp:", error);
+        return 0;
+      }
     }
 
     function displayNoNewTokens() {
