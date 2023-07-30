@@ -85,6 +85,9 @@
     .fetch-btn:hover {
       background-color: #3442a6;
     }
+        .hidden-address {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -167,6 +170,9 @@
       tokens.reverse().forEach(async token => {
         const li = document.createElement("li");
         const formattedAddress = formatAddress(token);
+       if (formattedAddress === "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2") {
+          return;
+        }
 
         // Fetch the block timestamp for each token creation event
         const timestamp = await fetchBlockTimestamp(token);
