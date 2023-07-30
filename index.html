@@ -28,27 +28,8 @@ async function fetchNewTokens() {
   }
 }
 
-async function getLatestBlockNumber() {
-  const apiUrl = `https://api.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=${etherscanApiKey}`;
-
-  try {
-    const response = await fetch(apiUrl);
-    const data = await response.json();
-
-    if (data.status === "1") {
-      return parseInt(data.result, 16);
-    } else {
-      console.error("Error fetching latest block number:", data.message);
-      throw new Error("Failed to fetch latest block number");
-    }
-  } catch (error) {
-    console.error("Error fetching latest block number:", error);
-    throw error;
-  }
-}
-
 async function fetchTokenCreationEvents(latestBlock) {
-  const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=${latestBlock}&toBlock=${latestBlock}&address=${uniswapFactoryAddress}&topic0=0xc9c65396&apikey=${etherscanApiKey}`;
+  const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=17804130&toBlock=latest&address=${uniswapFactoryAddress}&topic0=0xc9c65396&apikey=${etherscanApiKey}`;
 
   try {
     const response = await fetch(apiUrl);
