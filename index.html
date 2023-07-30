@@ -36,24 +36,23 @@
     const etherscanApiKey = "AFFD2SXUNV3RY968V4442KMBP4928IBMJ7";
     const tokenContractAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"; // Replace with your token contract address
 
-async function fetchTokenEventLogs() {
-  const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=17804130&toBlock=latest&address=${tokenContractAddress}&apikey=${etherscanApiKey}`;
+    async function fetchTokenEventLogs() {
+      const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=17804130&toBlock=latest&address=${tokenContractAddress}&apikey=${etherscanApiKey}`;
 
-  try {
-    const response = await fetch(apiUrl);
-    const data = await response.json();
+      try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
 
-    if (data.status === "1" && data.message === "OK") {
-      const sortedLogs = data.result.sort((a, b) => b.blockNumber - a.blockNumber); // Sort in descending order
-      displayEventLogs(sortedLogs);
-    } else {
-      console.error("Error fetching event logs:", data.message);
+        if (data.status === "1" && data.message === "OK") {
+          const sortedLogs = data.result.sort((a, b) => b.blockNumber - a.blockNumber); // Sort in descending order
+          displayEventLogs(sortedLogs);
+        } else {
+          console.error("Error fetching event logs:", data.message);
+        }
+      } catch (error) {
+        console.error("Error fetching event logs:", error);
+      }
     }
-  } catch (error) {
-    console.error("Error fetching event logs:", error);
-  }
-}
-
 
     function formatTimestamp(timestamp) {
       const date = new Date(timestamp * 1000);
@@ -66,25 +65,25 @@ async function fetchTokenEventLogs() {
       return `${ageInSeconds} secs ago`;
     }
 
-async function fetchTransactionInfo(transactionHash) {
-  const corsProxyUrl = "https://cors-anywhere.herokuapp.com/";
-  const apiUrl = `https://api.etherscan.io/api?module=proxy&action=getTransactionByHash&txhash=${transactionHash}&apikey=${etherscanApiKey}`;
+    async function fetchTransactionInfo(transactionHash) {
+      const corsProxyUrl = "https://cors-anywhere.herokuapp.com/";
+      const apiUrl = `https://api.etherscan.io/api?module=proxy&action=getTransactionByHash&txhash=${transactionHash}&apikey=${etherscanApiKey}`;
 
-  try {
-    const response = await fetch(corsProxyUrl + apiUrl);
-    const data = await response.json();
+      try {
+        const response = await fetch(corsProxyUrl + apiUrl);
+        const data = await response.json();
 
-    if (data.status === "1") {
-      return data.result;
-    } else {
-      console.error("Error fetching transaction info:", data.message);
-      return null;
+        if (data.status === "1") {
+          return data.result;
+        } else {
+          console.error("Error fetching transaction info:", data.message);
+          return null;
+        }
+      } catch (error) {
+        console.error("Error fetching transaction info:", error);
+        return null;
+      }
     }
-  } catch (error) {
-    console.error("Error fetching transaction info:", error);
-    return null;
-  }
-}
 
     async function displayTransactionInfo(transactionHash) {
       const transactionInfo = await fetchTransactionInfo(transactionHash);
@@ -103,7 +102,46 @@ async function fetchTransactionInfo(transactionHash) {
       }
     }
 
-    function displayEventLogs(eventLogs) {
+    function getMethodNameFromTopics(topics) {
+      // The method name (signature) is the first topic (topics[0])
+      const methodName = topics[0];
+      return methodName;
+    }
+
+    // Add this helper function to decode topics
+    function decodeTopic(topic) {
+      // Remove the "0x" prefix and decode the topic as a hexadecimal value
+      return parseInt(topic.slice(2), 16);
+    }
+
+    function getLogInfo(eventLog) {
+      const methodName = getMethodNameFromTopics(eventLog.topics);
+      const topic0Decoded = decodeTopic(eventLog.topics[0]);
+      const topic1Decoded = decodeTopic(eventLog.topics[1]);
+      const topic2Decoded = decodeTopic(eventLog.topics[2]);
+
+      if (methodName === "0xc9c65396") {
+        // PairCreated event
+        const logInfo = `PairCreated (index_topic_1 address token0, index_topic_2 address token1, address pair, uint256 noname)\n`;
+        const topic0 = `[topic0] ${eventLog.topics[0]} (${topic0Decoded})\n`;
+        const topic1 = `[topic1] ${eventLog.topics[1]} (${topic1Decoded})\n`;
+        const topic2 = `[topic2] ${eventLog.topics[2]} (${topic2Decoded})\n`;
+        const data = `${JSON.stringify(eventLog.data, null, 2)}\n`;
+
+        return logInfo + topic0 + topic1 + topic2 + data;
+      } else {
+        // Other events
+        const logInfo = `${methodName}\n`;
+        const topic0 = `[topic0] ${eventLog.topics[0]} (${topic0Decoded})\n`;
+        const topic1 = `[topic1] ${eventLog.topics[1]} (${topic1Decoded})\n`;
+        const topic2 = `[topic2] ${eventLog.topics[2]} (${topic2Decoded})\n`;
+        const data = `${JSON.stringify(eventLog.data, null, 2)}\n`;
+
+        return logInfo + topic0 + topic1 + topic2 + data;
+      }
+    }
+
+    async function displayEventLogs(eventLogs) {
       const logsDiv = document.getElementById("logs");
       if (eventLogs.length === 0) {
         logsDiv.innerHTML = "No event logs found for the token.";
@@ -121,42 +159,12 @@ async function fetchTransactionInfo(transactionHash) {
           html += `<td>${methodName}</td>`;
           html += `<td><pre>${getLogInfo(eventLog)}</pre></td>`;
           html += "</tr>";
-          
-        const transactionHash = eventLog.transactionHash;
-        displayTransactionInfo(transactionHash);
+
+          const transactionHash = eventLog.transactionHash;
+          displayTransactionInfo(transactionHash);
         });
         html += "</table>";
         logsDiv.innerHTML = html;
-      }
-    }
-
-    function getMethodNameFromTopics(topics) {
-      // The method name (signature) is the first topic (topics[0])
-      const methodName = topics[0];
-      return methodName;
-    }
-
-    function getLogInfo(eventLog) {
-      const methodName = getMethodNameFromTopics(eventLog.topics);
-
-      if (methodName === "0xc9c65396") {
-        // PairCreated event
-        const logInfo = `PairCreated (index_topic_1 address token0, index_topic_2 address token1, address pair, uint256 noname)\n`;
-        const topic0 = `[topic0] ${eventLog.topics[0]}\n`;
-        const topic1 = `[topic1] ${eventLog.topics[1]}\n`;
-        const topic2 = `[topic2] ${eventLog.topics[2]}\n`;
-        const data = `${JSON.stringify(eventLog.data, null, 2)}\n`;
-
-        return logInfo + topic0 + topic1 + topic2 + data;
-      } else {
-        // Other events
-        const logInfo = `${methodName}\n`;
-        const topic0 = `[topic0] ${eventLog.topics[0]}\n`;
-        const topic1 = `[topic1] ${eventLog.topics[1]}\n`;
-        const topic2 = `[topic2] ${eventLog.topics[2]}\n`;
-        const data = `${JSON.stringify(eventLog.data, null, 2)}\n`;
-
-        return logInfo + topic0 + topic1 + topic2 + data;
       }
     }
 
