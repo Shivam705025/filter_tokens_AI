@@ -24,6 +24,9 @@
       background-color: #ffffff;
       border-radius: 10px;
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      display: grid;
+      grid-template-columns: 1fr 1fr; /* Divide the container into two columns */
+      grid-gap: 20px; /* Add some spacing between the columns */
     }
 
     #tokenList {
@@ -66,6 +69,7 @@
 
     .contract-code-section.show {
       display: block;
+      grid-column: span 2; /* Make the section span across both columns */
     }
 
     .contract-code {
@@ -93,6 +97,10 @@
     <h1>New Uniswap Tokens</h1>
     <button class="button" onclick="fetchNewTokens()">Fetch New Tokens</button>
     <ul id="tokenList"></ul>
+    <div class="contract-code-section" id="contractCodeSection">
+      <h3>Contract Code</h3>
+      <textarea class="contract-code" id="contractCodeTextArea" readonly></textarea>
+    </div>
   </div>
 
   <script src="https://cdn.ethers.io/lib/ethers-5.4.umd.min.js"></script>
@@ -156,11 +164,7 @@
           <span class="address">${formattedAddress}</span>
           <p class="timestamp">Created on: ${timestampStr}</p>
           <button class="button" onclick="goToEtherscan('${formattedAddress}')">View on Etherscan</button>
-          <button class="button contract-btn" data-address="${formattedAddress}">Fetch Contract Code</button>
-          <div class="contract-code-section" id="contractCodeSection-${formattedAddress}">
-            <h3>Contract Code</h3>
-            <textarea class="contract-code" id="contractCodeTextArea-${formattedAddress}" readonly></textarea>
-          </div>
+          <button class="button contract-btn" onclick="fetchAndDisplayContractCode('${formattedAddress}')">Fetch Contract Code</button>
         `;
 
         tokenList.appendChild(li);
@@ -202,13 +206,12 @@
     async function fetchAndDisplayContractCode(address) {
       const contractCode = await fetchContractCode(address);
       if (contractCode) {
-        const contractCodeSection = document.getElementById(`contractCodeSection-${address}`);
+        const contractCodeSection = document.getElementById("contractCodeSection");
         contractCodeSection.classList.add("show");
 
-        const contractCodeTextArea = document.getElementById(`contractCodeTextArea-${address}`);
+        const contractCodeTextArea = document.getElementById("contractCodeTextArea");
         contractCodeTextArea.value = contractCode;
       } else {
-        // Contract code not available or not verified
         const modal = document.createElement("div");
         modal.classList.add("modal");
 
@@ -230,7 +233,7 @@
     }
 
     async function fetchContractCode(address) {
-      const apiKeys = '8YUX8ETXVV5Y6YNWCN6TECQXSXAZTVRFPS'; // Replace with your actual API key
+      const apiKeys = '8YUX8ETXVV5Y6YNWCN6TECQXSXAZTVRFPS';
       const apiUrls = `https://api.etherscan.io/api?module=contract&action=getsourcecode&address=${address}&apikey=${apiKeys}`;
 
       try {
