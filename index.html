@@ -136,6 +136,21 @@
       color: #444;
       border-radius: 5px;
     }
+        .contract-btn {
+      background-color: #4e54c8;
+      color: #ffffff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 5px;
+      display: block;
+      margin: 10px auto;
+    }
+
+    .contract-btn:hover {
+      background-color: #3c3f88;
+    }
   </style>
 </head>
 <body>
@@ -240,7 +255,7 @@
           <span class="address">${formattedAddress}</span>
           <p class="timestamp">Created on: ${new Date(timestamp * 1000).toLocaleString()}</p>
           <button class="etherscan-btn" onclick="goToEtherscan('${formattedAddress}')">View on Etherscan</button>
-          <button class="contract-btn" onclick="viewContractCode('${formattedAddress}')">View Contract Code</button>
+          <button class="contract-btn" onclick="fetchAndDisplayContractCode('${formattedAddress}')">Fetch Contract Code</button>
         `;
           // Fetch contract code and display it
           const contractCode = await fetchContractCode(token);
@@ -258,6 +273,31 @@
       });
 
       tokenListDiv.appendChild(ul);
+    }
+        async function fetchAndDisplayContractCode(address) {
+      const contractCode = await fetchContractCode(address);
+      if (contractCode) {
+        // Display the contract code in a modal
+        const modal = document.createElement("div");
+        modal.classList.add("modal");
+
+        const closeButton = document.createElement("span");
+        closeButton.classList.add("close");
+        closeButton.innerHTML = "&times;";
+        closeButton.addEventListener("click", () => {
+          document.body.removeChild(modal);
+        });
+
+        const codeTextArea = document.createElement("textarea");
+        codeTextArea.classList.add("code-editor");
+        codeTextArea.value = contractCode;
+        codeTextArea.readOnly = true;
+
+        modal.appendChild(closeButton);
+        modal.appendChild(codeTextArea);
+
+        document.body.appendChild(modal);
+      }
     }
         async function viewContractCode(address) {
       const contractCode = await fetchContractCode(address);
