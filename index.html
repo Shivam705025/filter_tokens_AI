@@ -277,10 +277,34 @@ function showAIAnalysisResult(result) {
 
 
     async function analyzeContractCode(contractCode) {
-  // Replace this with the actual AI analysis code or API call
-  // For this example, we'll assume a dummy AI analysis result.
-  return "AI analysis result: This contract code seems secure and well-written.";
-}
+      const openAIEndpoint = "https://api.openai.com/v1/engines/davinci-codex/completions";
+      const openAIKey = "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"; // Replace with your actual API key
+
+      try {
+        const response = await axios.post(
+          openAIEndpoint,
+          {
+            prompt: `Analyze the following Solidity code:\n${contractCode}`,
+            max_tokens: 100,
+            temperature: 0.7,
+            n: 1,
+            stop: "\n",
+            api_key: openAIKey,
+          }
+        );
+
+        if (response && response.data && response.data.choices && response.data.choices.length > 0) {
+          const analysisResult = response.data.choices[0].text;
+          return analysisResult;
+        } else {
+          console.error("Error fetching analysis result from OpenAI API:", response);
+          return "Error fetching analysis result from OpenAI API";
+        }
+      } catch (error) {
+        console.error("Error analyzing code using OpenAI API:", error);
+        return "Error analyzing code using OpenAI API";
+      }
+    }
 
 
     async function fetchContractCode(address) {
