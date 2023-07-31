@@ -203,34 +203,34 @@
       window.open(`https://etherscan.io/address/${address}`, '_blank');
     }
 
-    async function fetchAndDisplayContractCode(address) {
-      const contractCode = await fetchContractCode(address);
-      if (contractCode) {
-        const contractCodeSection = document.getElementById("contractCodeSection");
-        contractCodeSection.classList.add("show");
+async function fetchAndDisplayContractCode(address) {
+  const contractCode = await fetchContractCode(address);
+  if (contractCode) {
+    // Open the contract code in a new tab
+    const newTab = window.open();
+    newTab.document.write('<pre>' + contractCode + '</pre>');
+  } else {
+    // Display an error message if contract code is not available or not verified
+    const modal = document.createElement("div");
+    modal.classList.add("modal");
 
-        const contractCodeTextArea = document.getElementById("contractCodeTextArea");
-        contractCodeTextArea.value = contractCode;
-      } else {
-        const modal = document.createElement("div");
-        modal.classList.add("modal");
+    const closeButton = document.createElement("span");
+    closeButton.classList.add("close");
+    closeButton.innerHTML = "&times;";
+    closeButton.addEventListener("click", () => {
+      document.body.removeChild(modal);
+    });
 
-        const closeButton = document.createElement("span");
-        closeButton.classList.add("close");
-        closeButton.innerHTML = "&times;";
-        closeButton.addEventListener("click", () => {
-          document.body.removeChild(modal);
-        });
+    const message = document.createElement("p");
+    message.textContent = "Contract code not available or not verified.";
 
-        const message = document.createElement("p");
-        message.textContent = "Contract code not available or not verified.";
+    modal.appendChild(closeButton);
+    modal.appendChild(message);
 
-        modal.appendChild(closeButton);
-        modal.appendChild(message);
+    document.body.appendChild(modal);
+  }
+}
 
-        document.body.appendChild(modal);
-      }
-    }
 
     async function fetchContractCode(address) {
       const apiKeys = '8YUX8ETXVV5Y6YNWCN6TECQXSXAZTVRFPS';
