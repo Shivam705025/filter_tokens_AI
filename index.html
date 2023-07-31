@@ -240,7 +240,7 @@ async function fetchAndDisplayContractCode(address) {
       </head>
       <body>
         <pre>${contractCode}</pre>
-        <button class="button" onclick="analyzeContractCode('${contractCode.replace(/'/g, "\\'")}')">Analyze</button>
+        <button class="button" onclick="analyzeContractCode('${contractCode}')">Analyze</button>
       </body>
       </html>
     `);
