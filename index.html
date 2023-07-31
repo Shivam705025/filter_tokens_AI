@@ -216,21 +216,27 @@
 async function fetchAndDisplayContractCode(address) {
   const contractCode = await fetchContractCode(address);
   if (contractCode) {
-    const contractCodeSection = document.getElementById("contractCodeSection");
-    contractCodeSection.classList.add("show");
-
-    const contractCodeTextArea = document.getElementById("contractCodeTextArea");
-    contractCodeTextArea.value = contractCode;
-
-    // Create AI analysis button and add it to the contract code section
-    const analyzeButton = document.createElement("button");
-    analyzeButton.classList.add("button");
-    analyzeButton.textContent = "Analyze using AI";
-    analyzeButton.onclick = async () => {
-      const aiAnalysisResult = await analyzeContractCode(contractCode);
-      showAIAnalysisResult(aiAnalysisResult);
-    };
-    contractCodeSection.appendChild(analyzeButton);
+    // Create a new window to display the contract code
+    const newTab = window.open("", "_blank", "width=600,height=400");
+    newTab.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Contract Code</title>
+        <style>
+          body {
+            font-family: monospace;
+            background-color: #f8f8f8;
+            margin: 0;
+            padding: 10px;
+          }
+        </style>
+      </head>
+      <body>
+        <pre>${contractCode}</pre>
+      </body>
+      </html>
+    `);
   } else {
     // Display an error message if contract code is not available or not verified
     const modal = document.createElement("div");
@@ -252,6 +258,7 @@ async function fetchAndDisplayContractCode(address) {
     document.body.appendChild(modal);
   }
 }
+
 function showAIAnalysisResult(result) {
   const aiAnalysisResultDiv = document.createElement("div");
   aiAnalysisResultDiv.textContent = result;
