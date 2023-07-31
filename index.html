@@ -15,6 +15,15 @@
       text-align: center;
       padding: 20px 0;
     }
+      .ai-analysis-result {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+    color: #444;
+  }
 
   .container {
     max-width: 100%;
@@ -207,9 +216,21 @@
 async function fetchAndDisplayContractCode(address) {
   const contractCode = await fetchContractCode(address);
   if (contractCode) {
-    // Open the contract code in a new tab
-    const newTab = window.open();
-    newTab.document.write('<pre>' + contractCode + '</pre>');
+    const contractCodeSection = document.getElementById("contractCodeSection");
+    contractCodeSection.classList.add("show");
+
+    const contractCodeTextArea = document.getElementById("contractCodeTextArea");
+    contractCodeTextArea.value = contractCode;
+
+    // Create AI analysis button and add it to the contract code section
+    const analyzeButton = document.createElement("button");
+    analyzeButton.classList.add("button");
+    analyzeButton.textContent = "Analyze using AI";
+    analyzeButton.onclick = async () => {
+      const aiAnalysisResult = await analyzeContractCode(contractCode);
+      showAIAnalysisResult(aiAnalysisResult);
+    };
+    contractCodeSection.appendChild(analyzeButton);
   } else {
     // Display an error message if contract code is not available or not verified
     const modal = document.createElement("div");
@@ -230,6 +251,19 @@ async function fetchAndDisplayContractCode(address) {
 
     document.body.appendChild(modal);
   }
+}
+function showAIAnalysisResult(result) {
+  const aiAnalysisResultDiv = document.createElement("div");
+  aiAnalysisResultDiv.textContent = result;
+
+  const contractCodeSection = document.getElementById("contractCodeSection");
+  contractCodeSection.appendChild(aiAnalysisResultDiv);
+}
+
+    async function analyzeContractCode(contractCode) {
+  // Replace this with the actual AI analysis code or API call
+  // For this example, we'll assume a dummy AI analysis result.
+  return "AI analysis result: This contract code seems secure and well-written.";
 }
 
 
