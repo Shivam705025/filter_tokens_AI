@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>New Uniswap Tokens</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.1/codemirror.min.css">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -15,29 +16,30 @@
       text-align: center;
       padding: 20px 0;
     }
-      .ai-analysis-result {
-    margin-top: 10px;
-    padding: 10px;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 14px;
-    color: #444;
-  }
 
-  .container {
-    max-width: 100%;
-    width: 100%;
-    margin: 0 auto;
-    padding: 20px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    background-color: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-    display: grid;
-    grid-template-columns: 1fr 1fr; /* Divide the container into two columns */
-    grid-gap: 20px; /* Add some spacing between the columns */
-  }
+    .ai-analysis-result {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+      color: #444;
+    }
+
+    .container {
+      max-width: 100%;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      display: grid;
+      grid-template-columns: 1fr 1fr; /* Divide the container into two columns */
+      grid-gap: 20px; /* Add some spacing between the columns */
+    }
 
     #tokenList {
       margin-top: 20px;
@@ -100,6 +102,12 @@
       font-size: 14px;
       color: #777;
     }
+
+    /* Style for the code editor */
+    .code-editor {
+      width: 100%;
+      height: 400px;
+    }
   </style>
 </head>
 <body>
@@ -109,9 +117,19 @@
     <ul id="tokenList"></ul>
     <div class="contract-code-section" id="contractCodeSection">
       <h3>Contract Code</h3>
-      <textarea class="contract-code" id="contractCodeTextArea" readonly></textarea>
+      <textarea class="contract-code code-editor" id="contractCodeTextArea" readonly></textarea>
+    </div>
+    <div id="analysisSection" class="contract-code-section">
+      <h3>Code Analysis</h3>
+      <div class="code-editor" id="analysisCodeEditor"></div>
+      <button class="button" onclick="analyzeContractCode()">Analyze Code</button>
+      <div id="analysisResult" class="ai-analysis-result"></div>
     </div>
   </div>
+
+  <!-- Include CodeMirror library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.1/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.1/mode/javascript/javascript.min.js"></script>
 
   <script src="https://cdn.ethers.io/lib/ethers-5.4.umd.min.js"></script>
   <script>
@@ -130,12 +148,9 @@
     }
 
     async function fetchTokenCreationEvents() {
-      const topic0 = "0xc9c65396";
-
-        const oneDayInSeconds = 24 * 60 * 60; // 24 hours * 60 minutes * 60 seconds
-        const currentBlock = await getCurrentBlockNumber();
-        const oneDayAgoBlock = currentBlock - Math.floor(oneDayInSeconds / 13); // Ethereum block time ~13 seconds
-
+      const oneDayInSeconds = 24 * 60 * 60; // 24 hours * 60 minutes * 60 seconds
+      const currentBlock = await getCurrentBlockNumber();
+      const oneDayAgoBlock = currentBlock - Math.floor(oneDayInSeconds / 13); // Ethereum block time ~13 seconds
 
       const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=${oneDayAgoBlock}&toBlock=latest&address=${uniswapFactoryAddress}&apikey=${etherscanApiKey}`;
 
@@ -217,98 +232,54 @@
       window.open(`https://etherscan.io/address/${address}`, '_blank');
     }
 
-async function fetchAndDisplayContractCode(address) {
-  const contractCode = await fetchContractCode(address);
-  if (contractCode) {
-    // Create a new window to display the contract code and the analyze button
-    const newTab = window.open("", "_blank", "width=600,height=400");
-    newTab.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Contract Code</title>
-        <style>
-          /* Existing styles here */
+    async function fetchAndDisplayContractCode(address) {
+      const contractCode = await fetchContractCode(address);
+      if (contractCode) {
+        // Create a new window to display the contract code and the analyze button
+        const newTab = window.open("", "_blank", "width=600,height=400");
+        newTab.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Contract Code</title>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.1/codemirror.min.css">
+            <style>
+              /* New style for the code editor */
+              .code-editor {
+                width: 100%;
+                height: 400px;
+              }
+            </style>
+          </head>
+          <body>
+            <h3>Contract Code</h3>
+            <textarea class="contract-code code-editor" readonly>${contractCode}</textarea>
+            <button class="button" onclick="analyzeContractCode('${contractCode}')">Analyze Code</button>
+            <div id="analysisResult" class="ai-analysis-result"></div>
+          </body>
+          </html>
+        `);
+      } else {
+        // Display an error message if contract code is not available or not verified
+        const modal = document.createElement("div");
+        modal.classList.add("modal");
 
-          /* New style for the analyze button */
-          .ai-analysis-result {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #f9f9f9;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-            color: #444;
-          }
-        </style>
-      </head>
-      <body>
-        <pre>${contractCode}</pre>
-      </body>
-      </html>
-    `);
-  } else {
-    // Display an error message if contract code is not available or not verified
-    const modal = document.createElement("div");
-    modal.classList.add("modal");
+        const closeButton = document.createElement("span");
+        closeButton.classList.add("close");
+        closeButton.innerHTML = "&times;";
+        closeButton.addEventListener("click", () => {
+          document.body.removeChild(modal);
+        });
 
-    const closeButton = document.createElement("span");
-    closeButton.classList.add("close");
-    closeButton.innerHTML = "&times;";
-    closeButton.addEventListener("click", () => {
-      document.body.removeChild(modal);
-    });
+        const message = document.createElement("p");
+        message.textContent = "Contract code not available or not verified.";
 
-    const message = document.createElement("p");
-    message.textContent = "Contract code not available or not verified.";
+        modal.appendChild(closeButton);
+        modal.appendChild(message);
 
-    modal.appendChild(closeButton);
-    modal.appendChild(message);
-
-    document.body.appendChild(modal);
-  }
-}
-
-function showAIAnalysisResult(result) {
-  const aiAnalysisResultDiv = document.createElement("div");
-  aiAnalysisResultDiv.textContent = result;
-  aiAnalysisResultDiv.classList.add("ai-analysis-result"); // Add CSS class to style the result div
-
-  const contractCodeSection = document.getElementById("contractCodeSection");
-  contractCodeSection.appendChild(aiAnalysisResultDiv);
-}
-
-
-    async function analyzeContractCode(contractCode) {
-      const openAIEndpoint = "https://api.openai.com/v1/engines/davinci-codex/completions";
-      const openAIKey = "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"; // Replace with your actual API key
-
-      try {
-        const response = await axios.post(
-          openAIEndpoint,
-          {
-            prompt: `Analyze the following Solidity code:\n${contractCode}`,
-            max_tokens: 100,
-            temperature: 0.7,
-            n: 1,
-            stop: "\n",
-            api_key: openAIKey,
-          }
-        );
-
-        if (response && response.data && response.data.choices && response.data.choices.length > 0) {
-          const analysisResult = response.data.choices[0].text;
-          return analysisResult;
-        } else {
-          console.error("Error fetching analysis result from OpenAI API:", response);
-          return "Error fetching analysis result from OpenAI API";
-        }
-      } catch (error) {
-        console.error("Error analyzing code using OpenAI API:", error);
-        return "Error analyzing code using OpenAI API";
+        document.body.appendChild(modal);
       }
     }
-
 
     async function fetchContractCode(address) {
       const apiKeys = '8YUX8ETXVV5Y6YNWCN6TECQXSXAZTVRFPS';
@@ -329,24 +300,58 @@ function showAIAnalysisResult(result) {
         return null;
       }
     }
+
     async function getCurrentBlockNumber() {
-  const apiUrl = `https://api.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=${etherscanApiKey}`;
+      const apiUrl = `https://api.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=${etherscanApiKey}`;
 
-  try {
-    const response = await fetch(apiUrl);
-    const data = await response.json();
+      try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
 
-    if (data.result) {
-      return parseInt(data.result, 16);
-    } else {
-      console.error("Error fetching current block number:", data);
-      return 0;
+        if (data.result) {
+          return parseInt(data.result, 16);
+        } else {
+          console.error("Error fetching current block number:", data);
+          return 0;
+        }
+      } catch (error) {
+        console.error("Error fetching current block number:", error);
+        return 0;
+      }
     }
-  } catch (error) {
-    console.error("Error fetching current block number:", error);
-    return 0;
-  }
-}
+
+    // Initialize CodeMirror for contract code
+    const contractCodeTextArea = document.getElementById("contractCodeTextArea");
+    const contractCodeEditor = CodeMirror.fromTextArea(contractCodeTextArea, {
+      readOnly: true, // Set to false if you want it to be editable
+      lineNumbers: true,
+      mode: "javascript",
+    });
+
+    // Initialize CodeMirror for code analysis
+    const analysisCodeEditor = CodeMirror(document.getElementById("analysisCodeEditor"), {
+      lineNumbers: true,
+      mode: "javascript",
+    });
+
+    // Function to analyze contract code
+    async function analyzeContractCode(contractCode) {
+      const analysisResult = await analyzeCode(contractCode);
+      displayAnalysisResult(analysisResult);
+    }
+
+    // Function to display the analysis result
+    function displayAnalysisResult(result) {
+      const analysisResultDiv = document.getElementById("analysisResult");
+      analysisResultDiv.textContent = result;
+    }
+
+    // Implement your code analysis function here
+    async function analyzeCode(contractCode) {
+      // You can implement code analysis logic here using CodeMirror
+      // For example, you can analyze the code for security vulnerabilities or patterns.
+      return "Analysis result: No issues found (sample result)";
+    }
   </script>
 </body>
 </html>
