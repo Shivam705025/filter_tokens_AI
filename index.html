@@ -132,7 +132,12 @@
     async function fetchTokenCreationEvents() {
       const topic0 = "0xc9c65396";
 
-      const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=17804130&toBlock=latest&address=${uniswapFactoryAddress}&apikey=${etherscanApiKey}`;
+        const oneDayInSeconds = 24 * 60 * 60; // 24 hours * 60 minutes * 60 seconds
+        const currentBlock = await getCurrentBlockNumber();
+        const oneDayAgoBlock = currentBlock - Math.floor(oneDayInSeconds / 13); // Ethereum block time ~13 seconds
+
+
+      const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=${oneDayAgoBlock}&toBlock=latest&address=${uniswapFactoryAddress}&apikey=${etherscanApiKey}`;
 
       try {
         const response = await fetch(apiUrl);
@@ -325,6 +330,24 @@ function showAIAnalysisResult(result) {
         return null;
       }
     }
+    async function getCurrentBlockNumber() {
+  const apiUrl = `https://api.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=${etherscanApiKey}`;
+
+  try {
+    const response = await fetch(apiUrl);
+    const data = await response.json();
+
+    if (data.result) {
+      return parseInt(data.result, 16);
+    } else {
+      console.error("Error fetching current block number:", data);
+      return 0;
+    }
+  } catch (error) {
+    console.error("Error fetching current block number:", error);
+    return 0;
+  }
+}
   </script>
 </body>
 </html>
