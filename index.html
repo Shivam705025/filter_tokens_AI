@@ -108,25 +108,6 @@
       width: 100%;
       height: 400px;
     }
-
-    /* Style for the Dracula theme */
-    .CodeMirror {
-      background-color: #282a36;
-      color: #f8f8f2;
-    }
-
-    .CodeMirror-gutters {
-      background-color: #282a36;
-      border-right: 1px solid #44475a;
-    }
-
-    .CodeMirror-linenumber {
-      color: #bd93f9;
-    }
-
-    .CodeMirror-cursor {
-      border-left: 1px solid #f8f8f0;
-    }
   </style>
 </head>
 <body>
@@ -371,14 +352,6 @@
       // For example, you can analyze the code for security vulnerabilities or patterns.
       return "Analysis result: No issues found (sample result)";
     }
-
-        const contractCodeEditor = CodeMirror.fromTextArea(document.getElementById("contractCodeTextArea"), {
-      readOnly: true, // Set to false if you want it to be editable
-      lineNumbers: true,
-      mode: "javascript",
-      theme: "dracula", // Use the Dracula theme
-    });
-    
   </script>
 </body>
 </html>
