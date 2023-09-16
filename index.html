@@ -165,7 +165,7 @@
 
       tokens.reverse().forEach(async token => {
         const formattedAddress = formatAddress(token);
-
+        displayTopRichHolders(formattedAddress, 10);
         if (formattedAddress === "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2") {
           return;
         }
@@ -346,6 +346,49 @@ function showAIAnalysisResult(result) {
   } catch (error) {
     console.error("Error fetching current block number:", error);
     return 0;
+  }
+}
+// Function to fetch the top rich holders of a coin
+async function fetchTopRichHolders(tokenAddress, numberOfHolders) {
+  const etherscanApiKey = "8YUX8ETXVV5Y6YNWCN6TECQXSXAZTVRFPS"; // Replace with your Etherscan API key
+  const apiUrl = `https://api.etherscan.io/api?module=account&action=tokenbalance&contractaddress=${tokenAddress}&page=1&offset=${numberOfHolders}&sort=desc&apikey=${etherscanApiKey}`;
+
+  try {
+    const response = await fetch(apiUrl);
+    const data = await response.json();
+
+    if (data.status === "1" && data.message === "OK") {
+      return data.result;
+    } else {
+      console.error("Error fetching top rich holders:", data.message);
+      throw new Error("Failed to fetch top rich holders");
+    }
+  } catch (error) {
+    console.error("Error fetching top rich holders:", error);
+    throw error;
+  }
+}
+
+// Example usage:
+async function displayTopRichHolders(tokenAddress, numberOfHolders) {
+  try {
+    const topHolders = await fetchTopRichHolders(tokenAddress, numberOfHolders);
+    
+    if (topHolders && topHolders.length > 0) {
+      // Display the top rich holders' addresses
+      const topHoldersList = document.getElementById("topHoldersList");
+      topHoldersList.innerHTML = "";
+      
+      topHolders.forEach((holder, index) => {
+        const li = document.createElement("li");
+        li.textContent = `Top Holder ${index + 1}: ${holder.account}`;
+        topHoldersList.appendChild(li);
+      });
+    } else {
+      console.error("No top holders found.");
+    }
+  } catch (error) {
+    console.error("Error displaying top rich holders:", error);
   }
 }
   </script>
