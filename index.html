@@ -1,357 +1,72 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>New Uniswap Tokens</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.1/codemirror.min.css">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f8f8f8;
-      margin: 0;
-      padding: 0;
-    }
-
-    h1 {
-      color: #4e54c8;
-      text-align: center;
-      padding: 20px 0;
-    }
-
-    .ai-analysis-result {
-      margin-top: 10px;
-      padding: 10px;
-      background-color: #f9f9f9;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      font-size: 14px;
-      color: #444;
-    }
-
-    .container {
-      max-width: 100%;
-      width: 100%;
-      margin: 0 auto;
-      padding: 20px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      background-color: #ffffff;
-      border-radius: 10px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-      display: grid;
-      grid-template-columns: 1fr 1fr; /* Divide the container into two columns */
-      grid-gap: 20px; /* Add some spacing between the columns */
-    }
-
-    #tokenList {
-      margin-top: 20px;
-      list-style-type: none;
-      padding: 0;
-    }
-
-    li {
-      background-color: #ffffff;
-      border: 1px solid #dddddd;
-      padding: 10px;
-      margin-bottom: 10px;
-    }
-
-    .address {
-      font-family: monospace;
-      overflow-wrap: break-word;
-    }
-
-    .button {
-      background-color: #4e54c8;
-      color: #ffffff;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-top: 5px;
-      margin-left: 10px;
-    }
-
-    .button:hover {
-      background-color: #3c3f88;
-    }
-
-    .contract-code-section {
-      display: none;
-      margin-top: 10px;
-    }
-
-    .contract-code-section.show {
-      display: block;
-      grid-column: span 2; /* Make the section span across both columns */
-    }
-
-    .contract-code {
-      width: 100%;
-      height: 150px;
-      resize: none;
-      background-color: #f9f9f9;
-      border: 1px solid #ddd;
-      padding: 10px;
-      font-family: monospace;
-      font-size: 14px;
-      color: #444;
-      border-radius: 5px;
-      margin-top: 10px;
-    }
-
-    .timestamp {
-      font-size: 14px;
-      color: #777;
-    }
-
-    /* Style for the code editor */
-    .code-editor {
-      width: 100%;
-      height: 400px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raydium Pairs on Solana</title>
 </head>
 <body>
-  <div class="container">
-    <h1>New Uniswap Tokens</h1>
-    <button class="button" onclick="fetchNewTokens()">Fetch New Tokens</button>
-    <ul id="tokenList"></ul>
-    <div class="contract-code-section" id="contractCodeSection">
-      <h3>Contract Code</h3>
-      <textarea class="contract-code code-editor" id="contractCodeTextArea" readonly></textarea>
-    </div>
-    <div id="analysisSection" class="contract-code-section">
-      <h3>Code Analysis</h3>
-      <div class="code-editor" id="analysisCodeEditor"></div>
-      <button class="button" onclick="analyzeContractCode()">Analyze Code</button>
-      <div id="analysisResult" class="ai-analysis-result"></div>
-    </div>
-  </div>
+    <h1>Latest Raydium Pairs on Solana</h1>
 
-  <!-- Include CodeMirror library -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.1/codemirror.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.1/mode/javascript/javascript.min.js"></script>
+    <ul id="raydiumPairsList">
+        <!-- Pairs will be dynamically populated here -->
+    </ul>
 
-  <script src="https://cdn.ethers.io/lib/ethers-5.4.umd.min.js"></script>
-  <script>
-    const etherscanApiKey = "AFFD2SXUNV3RY968V4442KMBP4928IBMJ7";
-    const uniswapFactoryAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
+    <script>
+        async function fetchRaydiumPairs() {
+            try {
+                const solanaRpcUrl = 'https://api.mainnet-beta.solana.com'; // Solana Mainnet RPC URL
 
-    async function fetchNewTokens() {
-      const events = await fetchTokenCreationEvents();
+                // Construct the RPC request to get all Raydium pairs
+                const response = await fetch(solanaRpcUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        jsonrpc: '2.0',
+                        id: 1,
+                        method: 'getProgramAccounts',
+                        params: [
+                            'PAiRwiNGs2Dv2owYFgRb2AsgL5jkp5htydNWn5iCJEX', // Raydium program ID
+                            {
+                                encoding: 'jsonParsed',
+                                filters: [
+                                    {
+                                        dataSize: 320, // Data size for Raydium pair accounts
+                                    },
+                                ],
+                            },
+                        ],
+                    }),
+                });
 
-      if (events.length === 0) {
-        displayNoNewTokens();
-      } else {
-        const tokens = extractTokenAddresses(events);
-        displayTokens(tokens);
-      }
-    }
+                const data = await response.json();
 
-    async function fetchTokenCreationEvents() {
-      const oneDayInSeconds = 24 * 60 * 60; // 24 hours * 60 minutes * 60 seconds
-      const currentBlock = await getCurrentBlockNumber();
-      const oneDayAgoBlock = currentBlock - Math.floor(oneDayInSeconds / 13); // Ethereum block time ~13 seconds
+                if (data.result) {
+                    const pairs = data.result.map(pair => pair.account.data);
 
-      const apiUrl = `https://api.etherscan.io/api?module=logs&action=getLogs&fromBlock=${oneDayAgoBlock}&toBlock=latest&address=${uniswapFactoryAddress}&apikey=${etherscanApiKey}`;
+                    // Render pairs in the HTML
+                    const pairsList = document.getElementById('raydiumPairsList');
+                    pairsList.innerHTML = ''; // Clear previous content
 
-      try {
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-
-        if (data.status === "1" && data.message === "OK") {
-          return data.result;
-        } else {
-          console.error("Error fetching token creation events:", data.message);
-          throw new Error("Failed to fetch token creation events");
-        }
-      } catch (error) {
-        console.error("Error fetching token creation events:", error);
-        throw error;
-      }
-    }
-
-    function extractTokenAddresses(events) {
-      return events.map(event => event.topics[1]);
-    }
-
-    function displayTokens(tokens) {
-      const tokenList = document.getElementById("tokenList");
-      tokenList.innerHTML = "";
-
-      tokens.reverse().forEach(async token => {
-        const formattedAddress = formatAddress(token);
-        if (formattedAddress === "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2") {
-          return;
+                    pairs.forEach(pairData => {
+                        const li = document.createElement('li');
+                        li.textContent = JSON.stringify(pairData); // You can format this data as needed
+                        pairsList.appendChild(li);
+                    });
+                } else {
+                    console.error('Failed to fetch Raydium pairs:', data.error);
+                }
+            } catch (error) {
+                console.error('Error fetching Raydium pairs:', error);
+            }
         }
 
-        const li = document.createElement("li");
-
-        const timestamp = await fetchBlockTimestamp(token);
-        const timestampStr = new Date(timestamp * 1000).toLocaleString();
-
-        li.innerHTML = `
-          <span class="address">${formattedAddress}</span>
-          <p class="timestamp">Created on: ${timestampStr}</p>
-          <button class="button" onclick="goToEtherscan('${formattedAddress}')">View on Etherscan</button>
-          <button class="button contract-btn" onclick="fetchAndDisplayContractCode('${formattedAddress}')">Fetch Contract Code</button>
-        `;
-
-        tokenList.appendChild(li);
-      });
-    }
-
-    async function fetchBlockTimestamp(address) {
-      const apiUrl = `https://api.etherscan.io/api?module=proxy&action=eth_getBlockByNumber&tag=latest&boolean=true&apikey=${etherscanApiKey}`;
-
-      try {
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-
-        if (data.result && data.result.timestamp) {
-          return parseInt(data.result.timestamp, 16);
-        } else {
-          console.error("Error fetching block timestamp:", data);
-          return 0;
-        }
-      } catch (error) {
-        console.error("Error fetching block timestamp:", error);
-        return 0;
-      }
-    }
-
-    function displayNoNewTokens() {
-      const tokenList = document.getElementById("tokenList");
-      tokenList.innerHTML = "<p>No new tokens created on Uniswap.</p>";
-    }
-
-    function formatAddress(address) {
-      return address.replace(/^0x0+/, '0x');
-    }
-
-    function goToEtherscan(address) {
-      window.open(`https://etherscan.io/address/${address}`, '_blank');
-    }
-
-    async function fetchAndDisplayContractCode(address) {
-      const contractCode = await fetchContractCode(address);
-      if (contractCode) {
-        // Create a new window to display the contract code and the analyze button
-        const newTab = window.open("", "_blank", "width=600,height=400");
-        newTab.document.write(`
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <title>Contract Code</title>
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.63.1/codemirror.min.css">
-            <style>
-              /* New style for the code editor */
-              .code-editor {
-                width: 100%;
-                height: 400px;
-              }
-            </style>
-          </head>
-          <body>
-            <h3>Contract Code</h3>
-            <textarea class="contract-code code-editor" readonly>${contractCode}</textarea>
-            <button class="button" onclick="analyzeContractCode('${contractCode}')">Analyze Code</button>
-            <div id="analysisResult" class="ai-analysis-result"></div>
-          </body>
-          </html>
-        `);
-      } else {
-        // Display an error message if contract code is not available or not verified
-        const modal = document.createElement("div");
-        modal.classList.add("modal");
-
-        const closeButton = document.createElement("span");
-        closeButton.classList.add("close");
-        closeButton.innerHTML = "&times;";
-        closeButton.addEventListener("click", () => {
-          document.body.removeChild(modal);
+        // Fetch Raydium pairs when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchRaydiumPairs();
         });
-
-        const message = document.createElement("p");
-        message.textContent = "Contract code not available or not verified.";
-
-        modal.appendChild(closeButton);
-        modal.appendChild(message);
-
-        document.body.appendChild(modal);
-      }
-    }
-
-    async function fetchContractCode(address) {
-      const apiKeys = '8YUX8ETXVV5Y6YNWCN6TECQXSXAZTVRFPS';
-      const apiUrls = `https://api.etherscan.io/api?module=contract&action=getsourcecode&address=${address}&apikey=${apiKeys}`;
-
-      try {
-        const response = await fetch(apiUrls);
-        const data = await response.json();
-
-        if (data.status === "1" && data.result.length > 0) {
-          return data.result[0].SourceCode;
-        } else {
-          console.error("Error fetching contract source code:", data);
-          return null;
-        }
-      } catch (error) {
-        console.error("Error fetching contract source code:", error);
-        return null;
-      }
-    }
-
-    async function getCurrentBlockNumber() {
-      const apiUrl = `https://api.etherscan.io/api?module=proxy&action=eth_blockNumber&apikey=${etherscanApiKey}`;
-
-      try {
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-
-        if (data.result) {
-          return parseInt(data.result, 16);
-        } else {
-          console.error("Error fetching current block number:", data);
-          return 0;
-        }
-      } catch (error) {
-        console.error("Error fetching current block number:", error);
-        return 0;
-      }
-    }
-
-    // Initialize CodeMirror for contract code
-    const contractCodeTextArea = document.getElementById("contractCodeTextArea");
-    const contractCodeEditor = CodeMirror.fromTextArea(contractCodeTextArea, {
-      readOnly: true, // Set to false if you want it to be editable
-      lineNumbers: true,
-      mode: "javascript",
-    });
-
-    // Initialize CodeMirror for code analysis
-    const analysisCodeEditor = CodeMirror(document.getElementById("analysisCodeEditor"), {
-      lineNumbers: true,
-      mode: "javascript",
-    });
-
-    // Function to analyze contract code
-    async function analyzeContractCode(contractCode) {
-      const analysisResult = await analyzeCode(contractCode);
-      displayAnalysisResult(analysisResult);
-    }
-
-    // Function to display the analysis result
-    function displayAnalysisResult(result) {
-      const analysisResultDiv = document.getElementById("analysisResult");
-      analysisResultDiv.textContent = result;
-    }
-
-    // Implement your code analysis function here
-    async function analyzeCode(contractCode) {
-      // You can implement code analysis logic here using CodeMirror
-      // For example, you can analyze the code for security vulnerabilities or patterns.
-      return "Analysis result: No issues found (sample result)";
-    }
-  </script>
+    </script>
 </body>
 </html>
